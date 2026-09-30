@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -114,41 +116,73 @@ canvas {
 
 </style>
 
+
 <script type="importmap">
+
 {
     "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
     }
 }
+
 </script>
 
 </head>
 
+
 <body>
 
+
 <div id="loading">
-    <div id="loadingTitle">HORIZON</div>
-    <div id="loadingText">BUILDING THE WORLD...</div>
+
+    <div id="loadingTitle">
+        HORIZON
+    </div>
+
+    <div id="loadingText">
+        BUILDING THE WORLD...
+    </div>
+
 </div>
+
 
 <div id="hud">
-    <div id="title">HORIZON</div>
-    <div id="subtitle">V3.3 • OPEN WORLD</div>
+
+    <div id="title">
+        HORIZON
+    </div>
+
+    <div id="subtitle">
+        V4.0 • OPEN WORLD
+    </div>
+
 </div>
 
-<div id="speed">0 KM/H</div>
+
+<div id="speed">
+    0 KM/H
+</div>
+
 
 <div id="controls">
+
     W / S — ACCELERATE / BRAKE<br>
     A / D — STEER<br>
     N — DAY / NIGHT
+
 </div>
+
 
 <div id="crosshair"></div>
 
 
 <script type="module">
+
+
+/* =========================================================
+   IMPORTS
+========================================================= */
 
 import * as THREE from "three";
 
@@ -166,21 +200,30 @@ import {
 
 
 /* =========================================================
-   THREE.JS SETUP
+   SCENE
 ========================================================= */
 
-const scene = new THREE.Scene();
+const scene =
+    new THREE.Scene();
+
 
 scene.background =
-    new THREE.Color(0x8fb4d9);
+    new THREE.Color(
+        0x8fb4d9
+    );
+
 
 scene.fog =
     new THREE.Fog(
         0x8fb4d9,
-        450,
-        1700
+        500,
+        1900
     );
 
+
+/* =========================================================
+   CAMERA
+========================================================= */
 
 const camera =
     new THREE.PerspectiveCamera(
@@ -188,8 +231,9 @@ const camera =
         window.innerWidth /
         window.innerHeight,
         0.1,
-        3000
+        3500
     );
+
 
 camera.position.set(
     0,
@@ -198,16 +242,26 @@ camera.position.set(
 );
 
 
+/* =========================================================
+   RENDERER
+========================================================= */
+
 const renderer =
     new THREE.WebGLRenderer({
+
         antialias: true,
-        powerPreference: "high-performance"
+
+        powerPreference:
+            "high-performance"
+
     });
+
 
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
 );
+
 
 renderer.setPixelRatio(
     Math.min(
@@ -216,19 +270,26 @@ renderer.setPixelRatio(
     )
 );
 
-renderer.shadowMap.enabled = true;
+
+renderer.shadowMap.enabled =
+    true;
+
 
 renderer.shadowMap.type =
     THREE.PCFSoftShadowMap;
 
+
 renderer.outputColorSpace =
     THREE.SRGBColorSpace;
+
 
 renderer.toneMapping =
     THREE.ACESFilmicToneMapping;
 
+
 renderer.toneMappingExposure =
-    1.15;
+    1.12;
+
 
 document.body.appendChild(
     renderer.domElement
@@ -241,10 +302,11 @@ document.body.appendChild(
 
 const hemisphere =
     new THREE.HemisphereLight(
-        0xbfdcff,
-        0x53634d,
-        1.6
+        0xc7dcff,
+        0x4b5a43,
+        1.65
     );
+
 
 scene.add(
     hemisphere
@@ -254,27 +316,52 @@ scene.add(
 const sun =
     new THREE.DirectionalLight(
         0xfff1d0,
-        2.5
+        2.7
     );
+
 
 sun.position.set(
     300,
-    600,
-    200
+    650,
+    250
 );
 
-sun.castShadow = true;
 
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
+sun.castShadow =
+    true;
 
-sun.shadow.camera.left = -500;
-sun.shadow.camera.right = 500;
-sun.shadow.camera.top = 500;
-sun.shadow.camera.bottom = -500;
 
-sun.shadow.camera.near = 10;
-sun.shadow.camera.far = 1800;
+sun.shadow.mapSize.width =
+    2048;
+
+
+sun.shadow.mapSize.height =
+    2048;
+
+
+sun.shadow.camera.left =
+    -600;
+
+
+sun.shadow.camera.right =
+    600;
+
+
+sun.shadow.camera.top =
+    600;
+
+
+sun.shadow.camera.bottom =
+    -600;
+
+
+sun.shadow.camera.near =
+    10;
+
+
+sun.shadow.camera.far =
+    1900;
+
 
 scene.add(
     sun
@@ -292,13 +379,16 @@ const loader =
 const draco =
     new DRACOLoader();
 
+
 draco.setDecoderPath(
     "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/"
 );
 
+
 loader.setDRACOLoader(
     draco
 );
+
 
 loader.setMeshoptDecoder(
     MeshoptDecoder
@@ -309,13 +399,53 @@ loader.setMeshoptDecoder(
    WORLD SETTINGS
 ========================================================= */
 
-const CHUNK_SIZE = 240;
+const CHUNK_SIZE =
+    240;
 
-const LOAD_RADIUS = 2;
 
-const UNLOAD_RADIUS = 3;
+const LOAD_RADIUS =
+    2;
 
-const WORLD_SEED = 72831;
+
+const UNLOAD_RADIUS =
+    3;
+
+
+const WORLD_SEED =
+    72831;
+
+
+/*
+   Road elevation.
+
+   The terrain stays underneath the road.
+   The road is deliberately lifted enough to
+   prevent z-fighting and grass clipping.
+*/
+
+const ROAD_LIFT =
+    0.62;
+
+
+const ROAD_MARKING_LIFT =
+    0.10;
+
+
+const SIDEWALK_LIFT =
+    0.45;
+
+
+/*
+   Clearance around roads.
+*/
+
+const TREE_ROAD_CLEARANCE =
+    10;
+
+
+const BUILDING_ROAD_CLEARANCE =
+    8;
+
 
 const chunks =
     new Map();
@@ -325,15 +455,19 @@ const chunks =
    SEEDED RANDOM
 ========================================================= */
 
-function hash2D(x, z) {
+function hash2D(
+    x,
+    z
+) {
 
-    let h =
+    const h =
         Math.sin(
             x * 127.1 +
             z * 311.7 +
             WORLD_SEED
         ) *
         43758.5453123;
+
 
     return h -
         Math.floor(h);
@@ -348,13 +482,19 @@ function randomRange(
 ) {
 
     return min +
-        hash2D(x, z) *
-        (max - min);
+        hash2D(
+            x,
+            z
+        ) *
+        (
+            max -
+            min
+        );
 }
 
 
 /* =========================================================
-   SMOOTH NOISE
+   NOISE
 ========================================================= */
 
 function smoothNoise(
@@ -376,32 +516,60 @@ function smoothNoise(
 
 
     const sx =
-        x - x0;
+        x -
+        x0;
 
     const sz =
-        z - z0;
+        z -
+        z0;
 
 
     const a =
-        hash2D(x0, z0);
+        hash2D(
+            x0,
+            z0
+        );
+
 
     const b =
-        hash2D(x1, z0);
+        hash2D(
+            x1,
+            z0
+        );
+
 
     const c =
-        hash2D(x0, z1);
+        hash2D(
+            x0,
+            z1
+        );
+
 
     const d =
-        hash2D(x1, z1);
+        hash2D(
+            x1,
+            z1
+        );
 
 
     const u =
-        sx * sx *
-        (3 - 2 * sx);
+        sx *
+        sx *
+        (
+            3 -
+            2 *
+            sx
+        );
+
 
     const v =
-        sz * sz *
-        (3 - 2 * sz);
+        sz *
+        sz *
+        (
+            3 -
+            2 *
+            sz
+        );
 
 
     const top =
@@ -410,6 +578,7 @@ function smoothNoise(
             b,
             u
         );
+
 
     const bottom =
         THREE.MathUtils.lerp(
@@ -428,7 +597,7 @@ function smoothNoise(
 
 
 /* =========================================================
-   TERRAIN HEIGHT
+   TERRAIN
 ========================================================= */
 
 function terrainHeight(
@@ -440,33 +609,37 @@ function terrainHeight(
         smoothNoise(
             x * 0.0017,
             z * 0.0017
-        ) * 24;
+        ) *
+        24;
 
 
     const medium =
         smoothNoise(
             x * 0.004,
             z * 0.004
-        ) * 9;
+        ) *
+        9;
 
 
     const small =
         smoothNoise(
             x * 0.015,
             z * 0.015
-        ) * 2;
+        ) *
+        2;
 
 
     return (
         large +
         medium +
         small
-    ) - 12;
+    ) -
+    12;
 }
 
 
 /* =========================================================
-   BIOME
+   BIOMES
 ========================================================= */
 
 function getBiome(
@@ -482,7 +655,8 @@ function getBiome(
 
 
     if (
-        distance < 650
+        distance <
+        700
     ) {
 
         return "city";
@@ -491,13 +665,14 @@ function getBiome(
 
     const noise =
         smoothNoise(
-            x * 0.0008,
-            z * 0.0008
+            x * 0.00075,
+            z * 0.00075
         );
 
 
     if (
-        noise > 0.72
+        noise >
+        0.73
     ) {
 
         return "mountain";
@@ -505,7 +680,8 @@ function getBiome(
 
 
     if (
-        noise < 0.25
+        noise <
+        0.24
     ) {
 
         return "coast";
@@ -522,58 +698,196 @@ function getBiome(
 
 const grassMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x526e4a,
-        roughness: 1
+
+        color:
+            0x526e4a,
+
+        roughness:
+            1
+
     });
 
 
 const countrysideMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x607a4c,
-        roughness: 1
+
+        color:
+            0x657f50,
+
+        roughness:
+            1
+
     });
 
 
 const mountainMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x5c625c,
-        roughness: 1
+
+        color:
+            0x626660,
+
+        roughness:
+            1
+
     });
 
 
 const sandMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0xb7a36d,
-        roughness: 1
+
+        color:
+            0xb9a66f,
+
+        roughness:
+            1
+
     });
 
 
 const roadMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x25272b,
-        roughness: .92,
-        metalness: .05
+
+        color:
+            0x25272b,
+
+        roughness:
+            .94,
+
+        metalness:
+            .04
+
+    });
+
+
+const roadShoulderMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x55575a,
+
+        roughness:
+            1
+
     });
 
 
 const sidewalkMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x85878a,
-        roughness: .95
+
+        color:
+            0x88898b,
+
+        roughness:
+            .95
+
+    });
+
+
+const curbMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0xa7a6a2,
+
+        roughness:
+            1
+
     });
 
 
 const whiteLineMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0xf4f4ef,
-        roughness: .8
+
+        color:
+            0xf2f1e9,
+
+        roughness:
+            .8
+
     });
 
 
 const yellowLineMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0xe4c23c,
-        roughness: .8
+
+        color:
+            0xe2bd36,
+
+        roughness:
+            .8
+
+    });
+
+
+const trunkMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x5b3e29,
+
+        roughness:
+            1
+
+    });
+
+
+const leafMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x315d35,
+
+        roughness:
+            1
+
+    });
+
+
+const bushMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x3d683c,
+
+        roughness:
+            1
+
+    });
+
+
+const rockMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x696a65,
+
+        roughness:
+            1
+
+    });
+
+
+const lampMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color:
+            0x27292d,
+
+        roughness:
+            .7,
+
+        metalness:
+            .55
+
+    });
+
+
+const lampGlowMaterial =
+    new THREE.MeshBasicMaterial({
+
+        color:
+            0xffd88a
+
     });
 
 
@@ -594,23 +908,21 @@ function getRoadAt(
 
 
     /*
-       CITY ROADS
+       CENTRAL CITY
     */
 
     if (
-        distance < 850
+        distance <
+        850
     ) {
-
-        const majorSpacing = 240;
-
 
         const majorX =
             Math.abs(
                 x -
                 Math.round(
-                    x / majorSpacing
+                    x / 240
                 ) *
-                majorSpacing
+                240
             );
 
 
@@ -618,46 +930,59 @@ function getRoadAt(
             Math.abs(
                 z -
                 Math.round(
-                    z / majorSpacing
+                    z / 240
                 ) *
-                majorSpacing
+                240
             );
 
 
         if (
-            majorX < 13
+            majorX <
+            13
         ) {
 
             return {
-                width: 26,
-                type: "major",
-                axis: "z"
+
+                width:
+                    26,
+
+                type:
+                    "major",
+
+                axis:
+                    "z"
+
             };
         }
 
 
         if (
-            majorZ < 13
+            majorZ <
+            13
         ) {
 
             return {
-                width: 26,
-                type: "major",
-                axis: "x"
+
+                width:
+                    26,
+
+                type:
+                    "major",
+
+                axis:
+                    "x"
+
             };
         }
-
-
-        const citySpacing = 80;
 
 
         const cityX =
             Math.abs(
                 x -
                 Math.round(
-                    x / citySpacing
+                    x / 80
                 ) *
-                citySpacing
+                80
             );
 
 
@@ -665,52 +990,64 @@ function getRoadAt(
             Math.abs(
                 z -
                 Math.round(
-                    z / citySpacing
+                    z / 80
                 ) *
-                citySpacing
+                80
             );
 
 
         if (
-            cityX < 6.5
+            cityX <
+            6.5
         ) {
 
             return {
-                width: 13,
-                type: "city",
-                axis: "z"
+
+                width:
+                    13,
+
+                type:
+                    "city",
+
+                axis:
+                    "z"
+
             };
         }
 
 
         if (
-            cityZ < 6.5
+            cityZ <
+            6.5
         ) {
 
             return {
-                width: 13,
-                type: "city",
-                axis: "x"
+
+                width:
+                    13,
+
+                type:
+                    "city",
+
+                axis:
+                    "x"
+
             };
         }
     }
 
 
     /*
-       HIGHWAYS
+       INFINITE HIGHWAYS
     */
-
-    const highwaySpacing =
-        480;
-
 
     const highwayX =
         Math.abs(
             x -
             Math.round(
-                x / highwaySpacing
+                x / 480
             ) *
-            highwaySpacing
+            480
         );
 
 
@@ -718,32 +1055,48 @@ function getRoadAt(
         Math.abs(
             z -
             Math.round(
-                z / highwaySpacing
+                z / 480
             ) *
-            highwaySpacing
+            480
         );
 
 
     if (
-        highwayX < 8
+        highwayX <
+        9
     ) {
 
         return {
-            width: 18,
-            type: "highway",
-            axis: "z"
+
+            width:
+                18,
+
+            type:
+                "highway",
+
+            axis:
+                "z"
+
         };
     }
 
 
     if (
-        highwayZ < 8
+        highwayZ <
+        9
     ) {
 
         return {
-            width: 18,
-            type: "highway",
-            axis: "x"
+
+            width:
+                18,
+
+            type:
+                "highway",
+
+            axis:
+                "x"
+
         };
     }
 
@@ -753,7 +1106,7 @@ function getRoadAt(
 
 
 /* =========================================================
-   ROAD CENTER CHECKS
+   ROAD CENTER LOOKUPS
 ========================================================= */
 
 function roadExistsOnX(
@@ -763,18 +1116,26 @@ function roadExistsOnX(
     const major =
         Math.round(
             z / 240
-        ) * 240;
+        ) *
+        240;
 
 
     if (
         Math.abs(
-            z - major
-        ) < 13
+            z -
+            major
+        ) <
+        13
     ) {
 
         return {
-            width: 26,
-            type: "major"
+
+            width:
+                26,
+
+            type:
+                "major"
+
         };
     }
 
@@ -782,43 +1143,55 @@ function roadExistsOnX(
     const city =
         Math.round(
             z / 80
-        ) * 80;
+        ) *
+        80;
 
 
     if (
         Math.abs(
-            z - city
-        ) < 6.5
+            z -
+            city
+        ) <
+        6.5 &&
+        Math.abs(city) <
+        850
     ) {
 
-        if (
-            Math.abs(city) < 850
-        ) {
+        return {
 
-            return {
-                width: 13,
-                type: "city"
-            };
-        }
+            width:
+                13,
+
+            type:
+                "city"
+
+        };
     }
 
 
     const highway =
         Math.round(
             z / 480
-        ) * 480
-    ;
+        ) *
+        480;
 
 
     if (
         Math.abs(
-            z - highway
-        ) < 8
+            z -
+            highway
+        ) <
+        9
     ) {
 
         return {
-            width: 18,
-            type: "highway"
+
+            width:
+                18,
+
+            type:
+                "highway"
+
         };
     }
 
@@ -834,18 +1207,26 @@ function roadExistsOnZ(
     const major =
         Math.round(
             x / 240
-        ) * 240;
+        ) *
+        240;
 
 
     if (
         Math.abs(
-            x - major
-        ) < 13
+            x -
+            major
+        ) <
+        13
     ) {
 
         return {
-            width: 26,
-            type: "major"
+
+            width:
+                26,
+
+            type:
+                "major"
+
         };
     }
 
@@ -853,48 +1234,79 @@ function roadExistsOnZ(
     const city =
         Math.round(
             x / 80
-        ) * 80;
+        ) *
+        80;
 
 
     if (
         Math.abs(
-            x - city
-        ) < 6.5
+            x -
+            city
+        ) <
+        6.5 &&
+        Math.abs(city) <
+        850
     ) {
 
-        if (
-            Math.abs(city) < 850
-        ) {
+        return {
 
-            return {
-                width: 13,
-                type: "city"
-            };
-        }
+            width:
+                13,
+
+            type:
+                "city"
+
+        };
     }
 
 
     const highway =
         Math.round(
             x / 480
-        ) * 480
-    ;
+        ) *
+        480;
 
 
     if (
         Math.abs(
-            x - highway
-        ) < 8
+            x -
+            highway
+        ) <
+        9
     ) {
 
         return {
-            width: 18,
-            type: "highway"
+
+            width:
+                18,
+
+            type:
+                "highway"
+
         };
     }
 
 
     return null;
+}
+
+
+/* =========================================================
+   ROAD HEIGHT
+========================================================= */
+
+function roadHeight(
+    x,
+    z
+) {
+
+    return (
+        terrainHeight(
+            x,
+            z
+        ) +
+        ROAD_LIFT
+    );
 }
 
 
@@ -913,10 +1325,13 @@ function createTerrainChunk(
 
     const geometry =
         new THREE.PlaneGeometry(
+
             CHUNK_SIZE,
             CHUNK_SIZE,
-            24,
-            24
+
+            32,
+            32
+
         );
 
 
@@ -931,25 +1346,29 @@ function createTerrainChunk(
 
     for (
         let i = 0;
-        i < positions.count;
+        i <
+        positions.count;
         i++
     ) {
 
         const lx =
             positions.getX(i);
 
+
         const lz =
             positions.getZ(i);
 
 
         const wx =
-            cx * CHUNK_SIZE +
+            cx *
+            CHUNK_SIZE +
             lx +
             CHUNK_SIZE / 2;
 
 
         const wz =
-            cz * CHUNK_SIZE +
+            cz *
+            CHUNK_SIZE +
             lz +
             CHUNK_SIZE / 2;
 
@@ -968,12 +1387,14 @@ function createTerrainChunk(
 
 
     const centerX =
-        cx * CHUNK_SIZE +
+        cx *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
     const centerZ =
-        cz * CHUNK_SIZE +
+        cz *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
@@ -989,7 +1410,8 @@ function createTerrainChunk(
 
 
     if (
-        biome === "countryside"
+        biome ===
+        "countryside"
     ) {
 
         material =
@@ -998,7 +1420,8 @@ function createTerrainChunk(
 
 
     if (
-        biome === "mountain"
+        biome ===
+        "mountain"
     ) {
 
         material =
@@ -1007,7 +1430,8 @@ function createTerrainChunk(
 
 
     if (
-        biome === "coast"
+        biome ===
+        "coast"
     ) {
 
         material =
@@ -1022,7 +1446,8 @@ function createTerrainChunk(
         );
 
 
-    mesh.receiveShadow = true;
+    mesh.receiveShadow =
+        true;
 
 
     group.add(
@@ -1047,16 +1472,9 @@ function createRoadSurface(
     length
 ) {
 
-    /*
-       The road geometry uses WORLD coordinates.
-
-       This is important because all chunks are kept at
-       the origin. The terrain itself also uses world
-       coordinates inside its geometry.
-    */
-
     const geometry =
         new THREE.PlaneGeometry(
+
             axis === "x"
                 ? length
                 : width,
@@ -1065,8 +1483,9 @@ function createRoadSurface(
                 ? width
                 : length,
 
-            24,
-            8
+            32,
+            12
+
         );
 
 
@@ -1081,27 +1500,27 @@ function createRoadSurface(
 
     for (
         let i = 0;
-        i < positions.count;
+        i <
+        positions.count;
         i++
     ) {
 
         const lx =
             positions.getX(i);
 
+
         const lz =
             positions.getZ(i);
 
 
-        /*
-           Convert local road coordinates
-           into actual world coordinates.
-        */
-
         const wx =
-            centerX + lx;
+            centerX +
+            lx;
+
 
         const wz =
-            centerZ + lz;
+            centerZ +
+            lz;
 
 
         positions.setX(
@@ -1118,11 +1537,10 @@ function createRoadSurface(
 
         positions.setY(
             i,
-            terrainHeight(
+            roadHeight(
                 wx,
                 wz
-            ) +
-            0.18
+            )
         );
     }
 
@@ -1137,7 +1555,8 @@ function createRoadSurface(
         );
 
 
-    mesh.receiveShadow = true;
+    mesh.receiveShadow =
+        true;
 
 
     group.add(
@@ -1150,190 +1569,25 @@ function createRoadSurface(
 
 
 /* =========================================================
-   ROAD LINE
+   ROAD SHOULDER
 ========================================================= */
 
-function addRoadLine(
+function createRoadShoulder(
     group,
     centerX,
     centerZ,
     axis,
-    offset,
-    length,
-    thickness,
-    material
-) {
-
-    const geometry =
-        new THREE.PlaneGeometry(
-            axis === "x"
-                ? length
-                : thickness,
-
-            axis === "x"
-                ? thickness
-                : length
-        );
-
-
-    geometry.rotateX(
-        -Math.PI / 2
-    );
-
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-
-    let x =
-        centerX;
-
-    let z =
-        centerZ;
-
-
-    if (
-        axis === "x"
-    ) {
-
-        z += offset;
-
-    } else {
-
-        x += offset;
-    }
-
-
-    mesh.position.set(
-        x,
-        terrainHeight(
-            x,
-            z
-        ) +
-        0.29,
-        z
-    );
-
-
-    group.add(
-        mesh
-    );
-}
-
-
-/* =========================================================
-   DASHED CENTER LINE
-========================================================= */
-
-function addDashedLine(
-    group,
-    centerX,
-    centerZ,
-    axis,
-    length,
-    thickness,
-    material
-) {
-
-    const dashLength = 5;
-
-    const gapLength = 9;
-
-
-    for (
-        let p = -length / 2;
-        p < length / 2;
-        p += dashLength + gapLength
-    ) {
-
-        let x =
-            centerX;
-
-        let z =
-            centerZ;
-
-
-        if (
-            axis === "x"
-        ) {
-
-            x +=
-                p +
-                dashLength / 2;
-
-        } else {
-
-            z +=
-                p +
-                dashLength / 2;
-        }
-
-
-        const geometry =
-            new THREE.PlaneGeometry(
-                axis === "x"
-                    ? dashLength
-                    : thickness,
-
-                axis === "x"
-                    ? thickness
-                    : dashLength
-            );
-
-
-        geometry.rotateX(
-            -Math.PI / 2
-        );
-
-
-        const mesh =
-            new THREE.Mesh(
-                geometry,
-                material
-            );
-
-
-        mesh.position.set(
-            x,
-            terrainHeight(
-                x,
-                z
-            ) +
-            0.31,
-            z
-        );
-
-
-        group.add(
-            mesh
-        );
-    }
-}
-
-
-/* =========================================================
-   SIDEWALK
-========================================================= */
-
-function createSidewalk(
-    group,
-    centerX,
-    centerZ,
-    axis,
-    roadWidth,
+    width,
     length
 ) {
 
-    const sidewalkWidth =
-        3.5;
+    const shoulderWidth =
+        1.4;
 
 
     const sideOffset =
-        roadWidth / 2 +
-        sidewalkWidth / 2;
+        width / 2 +
+        shoulderWidth / 2;
 
 
     for (
@@ -1368,13 +1622,308 @@ function createSidewalk(
 
                 axis === "x"
                     ? length
+                    : shoulderWidth,
+
+                0.12,
+
+                axis === "x"
+                    ? shoulderWidth
+                    : length
+
+            );
+
+
+        const mesh =
+            new THREE.Mesh(
+                geometry,
+                roadShoulderMaterial
+            );
+
+
+        mesh.position.set(
+
+            x,
+
+            roadHeight(
+                x,
+                z
+            ) -
+            0.15,
+
+            z
+
+        );
+
+
+        mesh.receiveShadow =
+            true;
+
+
+        group.add(
+            mesh
+        );
+    }
+}
+
+
+/* =========================================================
+   ROAD LINE
+========================================================= */
+
+function addRoadLine(
+    group,
+    centerX,
+    centerZ,
+    axis,
+    offset,
+    length,
+    thickness,
+    material
+) {
+
+    const geometry =
+        new THREE.PlaneGeometry(
+
+            axis === "x"
+                ? length
+                : thickness,
+
+            axis === "x"
+                ? thickness
+                : length
+
+        );
+
+
+    geometry.rotateX(
+        -Math.PI / 2
+    );
+
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    let x =
+        centerX;
+
+
+    let z =
+        centerZ;
+
+
+    if (
+        axis === "x"
+    ) {
+
+        z +=
+            offset;
+
+    } else {
+
+        x +=
+            offset;
+    }
+
+
+    mesh.position.set(
+
+        x,
+
+        roadHeight(
+            x,
+            z
+        ) +
+        ROAD_MARKING_LIFT,
+
+        z
+
+    );
+
+
+    mesh.receiveShadow =
+        false;
+
+
+    group.add(
+        mesh
+    );
+}
+
+
+/* =========================================================
+   DASHED LINE
+========================================================= */
+
+function addDashedLine(
+    group,
+    centerX,
+    centerZ,
+    axis,
+    length,
+    thickness,
+    material
+) {
+
+    const dashLength =
+        5;
+
+
+    const gapLength =
+        9;
+
+
+    for (
+        let p =
+            -length / 2;
+
+        p <
+            length / 2;
+
+        p +=
+            dashLength +
+            gapLength
+    ) {
+
+        let x =
+            centerX;
+
+
+        let z =
+            centerZ;
+
+
+        if (
+            axis === "x"
+        ) {
+
+            x +=
+                p +
+                dashLength / 2;
+
+        } else {
+
+            z +=
+                p +
+                dashLength / 2;
+        }
+
+
+        const geometry =
+            new THREE.PlaneGeometry(
+
+                axis === "x"
+                    ? dashLength
+                    : thickness,
+
+                axis === "x"
+                    ? thickness
+                    : dashLength
+
+            );
+
+
+        geometry.rotateX(
+            -Math.PI / 2
+        );
+
+
+        const mesh =
+            new THREE.Mesh(
+                geometry,
+                material
+            );
+
+
+        mesh.position.set(
+
+            x,
+
+            roadHeight(
+                x,
+                z
+            ) +
+            ROAD_MARKING_LIFT +
+            0.01,
+
+            z
+
+        );
+
+
+        group.add(
+            mesh
+        );
+    }
+}
+
+
+/* =========================================================
+   SIDEWALKS
+========================================================= */
+
+function createSidewalk(
+    group,
+    centerX,
+    centerZ,
+    axis,
+    roadWidth,
+    length
+) {
+
+    const sidewalkWidth =
+        3.5;
+
+
+    const sideOffset =
+        roadWidth / 2 +
+        sidewalkWidth / 2;
+
+
+    for (
+        const side of [-1, 1]
+    ) {
+
+        let x =
+            centerX;
+
+
+        let z =
+            centerZ;
+
+
+        if (
+            axis === "x"
+        ) {
+
+            z +=
+                side *
+                sideOffset;
+
+        } else {
+
+            x +=
+                side *
+                sideOffset;
+        }
+
+
+        const geometry =
+            new THREE.BoxGeometry(
+
+                axis === "x"
+                    ? length
                     : sidewalkWidth,
 
-                0.22,
+                0.28,
 
                 axis === "x"
                     ? sidewalkWidth
                     : length
+
             );
 
 
@@ -1386,28 +1935,247 @@ function createSidewalk(
 
 
         mesh.position.set(
+
             x,
-            terrainHeight(
+
+            roadHeight(
                 x,
                 z
             ) +
-            0.25,
+            SIDEWALK_LIFT,
+
             z
+
         );
 
 
-        mesh.receiveShadow = true;
+        mesh.receiveShadow =
+            true;
 
 
         group.add(
             mesh
+        );
+
+
+        /*
+           Small curb.
+        */
+
+        const curbGeometry =
+            new THREE.BoxGeometry(
+
+                axis === "x"
+                    ? length
+                    : 0.25,
+
+                0.32,
+
+                axis === "x"
+                    ? 0.25
+                    : length
+
+            );
+
+
+        const curb =
+            new THREE.Mesh(
+                curbGeometry,
+                curbMaterial
+            );
+
+
+        const curbOffset =
+            roadWidth / 2 +
+            0.1;
+
+
+        let curbX =
+            centerX;
+
+
+        let curbZ =
+            centerZ;
+
+
+        if (
+            axis === "x"
+        ) {
+
+            curbZ +=
+                side *
+                curbOffset;
+
+        } else {
+
+            curbX +=
+                side *
+                curbOffset;
+        }
+
+
+        curb.position.set(
+
+            curbX,
+
+            roadHeight(
+                curbX,
+                curbZ
+            ) +
+            0.18,
+
+            curbZ
+
+        );
+
+
+        curb.receiveShadow =
+            true;
+
+
+        group.add(
+            curb
         );
     }
 }
 
 
 /* =========================================================
-   COMPLETE ROAD
+   STREET LIGHT
+========================================================= */
+
+function createStreetLight(
+    group,
+    x,
+    z,
+    rotation
+) {
+
+    const poleHeight =
+        6;
+
+
+    const pole =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                0.07,
+                0.1,
+                poleHeight,
+                6
+            ),
+
+            lampMaterial
+
+        );
+
+
+    pole.position.set(
+
+        x,
+
+        roadHeight(
+            x,
+            z
+        ) +
+        poleHeight / 2,
+
+        z
+
+    );
+
+
+    pole.castShadow =
+        true;
+
+
+    group.add(
+        pole
+    );
+
+
+    const arm =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                1.1,
+                0.07,
+                0.07
+            ),
+
+            lampMaterial
+
+        );
+
+
+    arm.position.set(
+
+        x +
+        Math.cos(rotation) *
+        0.5,
+
+        roadHeight(
+            x,
+            z
+        ) +
+        poleHeight,
+
+        z +
+        Math.sin(rotation) *
+        0.5
+
+    );
+
+
+    arm.rotation.y =
+        rotation;
+
+
+    group.add(
+        arm
+    );
+
+
+    const lamp =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+                0.16,
+                8,
+                8
+            ),
+
+            lampGlowMaterial
+
+        );
+
+
+    lamp.position.set(
+
+        x +
+        Math.cos(rotation),
+
+        roadHeight(
+            x,
+            z
+        ) +
+        poleHeight -
+        0.05,
+
+        z +
+        Math.sin(rotation)
+
+    );
+
+
+    group.add(
+        lamp
+    );
+}
+
+
+/* =========================================================
+   ROAD
 ========================================================= */
 
 function createRoad(
@@ -1419,6 +2187,16 @@ function createRoad(
     length,
     type
 ) {
+
+    createRoadShoulder(
+        group,
+        centerX,
+        centerZ,
+        axis,
+        width,
+        length
+    );
+
 
     createRoadSurface(
         group,
@@ -1442,7 +2220,7 @@ function createRoad(
         axis,
         -edgeOffset,
         length,
-        0.3,
+        0.28,
         whiteLineMaterial
     );
 
@@ -1454,7 +2232,7 @@ function createRoad(
         axis,
         edgeOffset,
         length,
-        0.3,
+        0.28,
         whiteLineMaterial
     );
 
@@ -1465,44 +2243,60 @@ function createRoad(
     ) {
 
         addDashedLine(
+
             group,
+
             centerX -
             (
                 axis === "z"
                     ? 0.55
                     : 0
             ),
+
             centerZ -
             (
                 axis === "x"
                     ? 0.55
                     : 0
             ),
+
             axis,
+
             length,
+
             0.35,
+
             yellowLineMaterial
+
         );
 
 
         addDashedLine(
+
             group,
+
             centerX +
             (
                 axis === "z"
                     ? 0.55
                     : 0
             ),
+
             centerZ +
             (
                 axis === "x"
                     ? 0.55
                     : 0
             ),
+
             axis,
+
             length,
+
             0.35,
+
             yellowLineMaterial
+
         );
     }
 
@@ -1512,30 +2306,45 @@ function createRoad(
     ) {
 
         addDashedLine(
+
             group,
+
             centerX,
+
             centerZ,
+
             axis,
+
             length,
+
             0.25,
+
             yellowLineMaterial
+
         );
 
 
         createSidewalk(
+
             group,
+
             centerX,
+
             centerZ,
+
             axis,
+
             width,
+
             length
+
         );
     }
 }
 
 
 /* =========================================================
-   CHUNK ROAD GENERATION
+   ROAD GENERATION
 ========================================================= */
 
 function generateRoads(
@@ -1545,15 +2354,19 @@ function generateRoads(
 ) {
 
     const minX =
-        cx * CHUNK_SIZE;
+        cx *
+        CHUNK_SIZE;
+
 
     const minZ =
-        cz * CHUNK_SIZE;
+        cz *
+        CHUNK_SIZE;
 
 
     const maxX =
         minX +
         CHUNK_SIZE;
+
 
     const maxZ =
         minZ +
@@ -1561,19 +2374,25 @@ function generateRoads(
 
 
     /*
-       HORIZONTAL ROADS
+       Horizontal roads.
     */
 
-    const firstHorizontal =
+    const firstZ =
         Math.floor(
             minZ / 80
-        ) * 80;
+        ) *
+        80;
 
 
     for (
-        let z = firstHorizontal;
-        z <= maxZ + 80;
-        z += 80
+        let z =
+            firstZ;
+
+        z <=
+            maxZ + 80;
+
+        z +=
+            80
     ) {
 
         const info =
@@ -1585,45 +2404,60 @@ function generateRoads(
         if (
             !info
         ) {
+
             continue;
         }
 
 
-        if (
-            z < minZ - 80 ||
-            z > maxZ + 80
-        ) {
-            continue;
-        }
+        /*
+           Generate a segment centered inside
+           this chunk.
 
+           The extra 80 creates overlap between
+           neighboring chunks, preventing gaps.
+        */
 
         createRoad(
+
             group,
+
             minX +
             CHUNK_SIZE / 2,
+
             z,
+
             "x",
+
             info.width,
-            CHUNK_SIZE + 40,
+
+            CHUNK_SIZE + 80,
+
             info.type
+
         );
     }
 
 
     /*
-       VERTICAL ROADS
+       Vertical roads.
     */
 
-    const firstVertical =
+    const firstX =
         Math.floor(
             minX / 80
-        ) * 80;
+        ) *
+        80;
 
 
     for (
-        let x = firstVertical;
-        x <= maxX + 80;
-        x += 80
+        let x =
+            firstX;
+
+        x <=
+            maxX + 80;
+
+        x +=
+            80
     ) {
 
         const info =
@@ -1635,28 +2469,94 @@ function generateRoads(
         if (
             !info
         ) {
-            continue;
-        }
 
-
-        if (
-            x < minX - 80 ||
-            x > maxX + 80
-        ) {
             continue;
         }
 
 
         createRoad(
+
             group,
+
             x,
+
             minZ +
             CHUNK_SIZE / 2,
+
             "z",
+
             info.width,
-            CHUNK_SIZE + 40,
+
+            CHUNK_SIZE + 80,
+
             info.type
+
         );
+    }
+
+
+    /*
+       Streetlights on major/city roads.
+
+       Only create a few per chunk to keep
+       performance reasonable.
+    */
+
+    for (
+        let z =
+            Math.ceil(
+                minZ / 120
+            ) *
+            120;
+
+        z <=
+            maxZ;
+
+        z +=
+            120
+    ) {
+
+        const road =
+            roadExistsOnX(
+                z
+            );
+
+
+        if (
+            road &&
+            road.type !==
+            "highway"
+        ) {
+
+            createStreetLight(
+
+                group,
+
+                minX + 35,
+
+                z -
+                road.width / 2 -
+                2,
+
+                0
+
+            );
+
+
+            createStreetLight(
+
+                group,
+
+                minX + 155,
+
+                z +
+                road.width / 2 +
+                2,
+
+                Math.PI
+
+            );
+        }
     }
 }
 
@@ -1668,17 +2568,24 @@ function generateRoads(
 const buildingFiles = [
 
     "large-building.glb",
+
     "store.glb",
+
     "apartment.glb",
+
     "large-building-2.glb",
+
     "bank.glb"
 
 ];
 
 
-const buildingTemplates = [];
+const buildingTemplates =
+    [];
 
-let buildingsReady = false;
+
+let buildingsReady =
+    false;
 
 
 /* =========================================================
@@ -1695,8 +2602,10 @@ async function loadBuildings() {
 
             const gltf =
                 await loader.loadAsync(
+
                     "./assets/buildings/" +
                     file
+
                 );
 
 
@@ -1714,9 +2623,11 @@ async function loadBuildings() {
                         object.castShadow =
                             true;
 
+
                         object.receiveShadow =
                             true;
                     }
+
                 }
             );
 
@@ -1760,9 +2671,11 @@ async function loadBuildings() {
 
             const maxDimension =
                 Math.max(
+
                     size.x,
                     size.y,
                     size.z
+
                 );
 
 
@@ -1771,18 +2684,40 @@ async function loadBuildings() {
 
 
             if (
-                file.includes("large")
+                file.includes(
+                    "large"
+                )
             ) {
 
                 targetHeight =
                     28;
 
             } else if (
-                file.includes("apartment")
+                file.includes(
+                    "apartment"
+                )
             ) {
 
                 targetHeight =
                     22;
+
+            } else if (
+                file.includes(
+                    "bank"
+                )
+            ) {
+
+                targetHeight =
+                    20;
+
+            } else if (
+                file.includes(
+                    "store"
+                )
+            ) {
+
+                targetHeight =
+                    13;
             }
 
 
@@ -1796,27 +2731,22 @@ async function loadBuildings() {
             );
 
 
-            const scaledWidth =
-                size.x *
-                scale;
-
-
-            const scaledDepth =
-                size.z *
-                scale;
-
-
-            const scaledHeight =
-                size.y *
-                scale;
-
-
             buildingTemplates.push({
 
-                model: root,
-                width: scaledWidth,
-                depth: scaledDepth,
-                height: scaledHeight
+                model:
+                    root,
+
+                width:
+                    size.x *
+                    scale,
+
+                depth:
+                    size.z *
+                    scale,
+
+                height:
+                    size.y *
+                    scale
 
             });
 
@@ -1827,7 +2757,7 @@ async function loadBuildings() {
         ) {
 
             console.warn(
-                "Could not load building:",
+                "Building failed:",
                 file,
                 error
             );
@@ -1841,7 +2771,7 @@ async function loadBuildings() {
 
 
 /* =========================================================
-   BUILDING ROAD CHECK
+   ROAD CLEARANCE FOR BUILDINGS
 ========================================================= */
 
 function buildingTouchesRoad(
@@ -1855,83 +2785,252 @@ function buildingTouchesRoad(
     const projectedX =
         halfX *
         Math.abs(
-            Math.cos(rotation)
+            Math.cos(
+                rotation
+            )
         ) +
 
         halfZ *
         Math.abs(
-            Math.sin(rotation)
+            Math.sin(
+                rotation
+            )
         );
 
 
     const projectedZ =
         halfX *
         Math.abs(
-            Math.sin(rotation)
+            Math.sin(
+                rotation
+            )
         ) +
 
         halfZ *
         Math.abs(
-            Math.cos(rotation)
+            Math.cos(
+                rotation
+            )
         );
 
 
-    const sample =
-        15;
+    /*
+       Check multiple points around the building.
+
+       Unlike the old version, this does NOT compare
+       the building's world coordinate directly to zero.
+    */
+
+    const points = [
+
+        [0, 0],
+
+        [projectedX, 0],
+
+        [-projectedX, 0],
+
+        [0, projectedZ],
+
+        [0, -projectedZ],
+
+        [projectedX, projectedZ],
+
+        [projectedX, -projectedZ],
+
+        [-projectedX, projectedZ],
+
+        [-projectedX, -projectedZ]
+
+    ];
 
 
     for (
-        let dx = -sample;
-        dx <= sample;
-        dx += 5
+        const point of points
     ) {
 
-        for (
-            let dz = -sample;
-            dz <= sample;
-            dz += 5
+        const road =
+            getRoadAt(
+
+                x + point[0],
+
+                z + point[1]
+
+            );
+
+
+        if (
+            road
         ) {
 
-            const road =
-                getRoadAt(
-                    x + dx,
-                    z + dz
-                );
+            return true;
+        }
+    }
 
 
-            if (
-                !road
-            ) {
-                continue;
-            }
+    /*
+       Additional sampling along the footprint.
+    */
+
+    const samples =
+        4;
 
 
-            if (
-                road.axis === "x"
-            ) {
+    for (
+        let i = 0;
+        i <= samples;
+        i++
+    ) {
 
-                if (
-                    Math.abs(z + dz) <
-                    road.width / 2 +
-                    projectedZ +
-                    3
-                ) {
+        const t =
+            i /
+            samples;
 
-                    return true;
-                }
 
-            } else {
+        const px =
+            THREE.MathUtils.lerp(
+                -projectedX,
+                projectedX,
+                t
+            );
 
-                if (
-                    Math.abs(x + dx) <
-                    road.width / 2 +
-                    projectedX +
-                    3
-                ) {
 
-                    return true;
-                }
-            }
+        const pz =
+            THREE.MathUtils.lerp(
+                -projectedZ,
+                projectedZ,
+                t
+            );
+
+
+        if (
+            getRoadAt(
+                x + px,
+                z + projectedZ +
+                BUILDING_ROAD_CLEARANCE
+            )
+        ) {
+
+            return true;
+        }
+
+
+        if (
+            getRoadAt(
+                x + px,
+                z - projectedZ -
+                BUILDING_ROAD_CLEARANCE
+            )
+        ) {
+
+            return true;
+        }
+
+
+        if (
+            getRoadAt(
+                x + projectedX +
+                BUILDING_ROAD_CLEARANCE,
+                z + pz
+            )
+        ) {
+
+            return true;
+        }
+
+
+        if (
+            getRoadAt(
+                x - projectedX -
+                BUILDING_ROAD_CLEARANCE,
+                z + pz
+            )
+        ) {
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   BUILDING COLLISION
+========================================================= */
+
+function buildingTouchesBuilding(
+    x,
+    z,
+    halfX,
+    halfZ,
+    rotation,
+    placed
+) {
+
+    const projectedX =
+        halfX *
+        Math.abs(
+            Math.cos(
+                rotation
+            )
+        ) +
+
+        halfZ *
+        Math.abs(
+            Math.sin(
+                rotation
+            )
+        );
+
+
+    const projectedZ =
+        halfX *
+        Math.abs(
+            Math.sin(
+                rotation
+            )
+        ) +
+
+        halfZ *
+        Math.abs(
+            Math.cos(
+                rotation
+            )
+        );
+
+
+    for (
+        const other of placed
+    ) {
+
+        const dx =
+            Math.abs(
+                x -
+                other.x
+            );
+
+
+        const dz =
+            Math.abs(
+                z -
+                other.z
+            );
+
+
+        if (
+            dx <
+            projectedX +
+            other.halfX +
+            7 &&
+
+            dz <
+            projectedZ +
+            other.halfZ +
+            7
+        ) {
+
+            return true;
         }
     }
 
@@ -1969,12 +3068,16 @@ function addBuilding(
 
 
     building.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
         ),
+
         z
+
     );
 
 
@@ -2004,12 +3107,14 @@ function generateBuildings(
 
 
     const centerX =
-        cx * CHUNK_SIZE +
+        cx *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
     const centerZ =
-        cz * CHUNK_SIZE +
+        cz *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
@@ -2020,18 +3125,33 @@ function generateBuildings(
         );
 
 
+    /*
+       Dense city.
+       Sparse countryside.
+    */
+
     let count =
-        biome === "city"
-            ? 9
-            : 2;
+        biome ===
+        "city"
+            ? 13
+            : biome ===
+              "countryside"
+                ? 2
+                : 0;
 
 
     if (
-        biome === "mountain"
+        biome ===
+        "coast"
     ) {
 
-        count = 0;
+        count =
+            2;
     }
+
+
+    const placed =
+        [];
 
 
     for (
@@ -2041,125 +3161,240 @@ function generateBuildings(
     ) {
 
         const seedX =
-            cx * 1000 +
-            i * 71 +
+            cx *
+            1000 +
+            i *
+            71 +
             17;
 
 
         const seedZ =
-            cz * 1000 +
-            i * 113 +
+            cz *
+            1000 +
+            i *
+            113 +
             29;
 
 
-        const x =
-            cx * CHUNK_SIZE +
-            randomRange(
-                seedX,
-                seedZ,
-                18,
-                CHUNK_SIZE - 18
-            );
+        let placedSuccessfully =
+            false;
 
 
-        const z =
-            cz * CHUNK_SIZE +
-            randomRange(
-                seedZ,
-                seedX,
-                18,
-                CHUNK_SIZE - 18
-            );
+        /*
+           Try several locations.
 
+           This prevents a building being lost
+           just because the first random point
+           happened to be on a road.
+        */
 
-        const template =
-            buildingTemplates[
-                Math.floor(
-                    hash2D(
-                        seedX,
-                        seedZ
-                    ) *
-                    buildingTemplates.length
-                )
-            ];
-
-
-        if (
-            !template
+        for (
+            let attempt = 0;
+            attempt < 8 &&
+            !placedSuccessfully;
+            attempt++
         ) {
-            continue;
-        }
+
+            const ax =
+                seedX +
+                attempt *
+                19;
 
 
-        const rotations = [
-            0,
-            Math.PI / 2,
-            Math.PI,
-            Math.PI * 1.5
-        ];
+            const az =
+                seedZ +
+                attempt *
+                31;
 
 
-        const rotation =
-            rotations[
-                Math.floor(
-                    hash2D(
-                        seedX + 50,
-                        seedZ + 80
-                    ) *
-                    rotations.length
-                )
+            const x =
+                cx *
+                CHUNK_SIZE +
+
+                randomRange(
+                    ax,
+                    az,
+                    15,
+                    CHUNK_SIZE - 15
+                );
+
+
+            const z =
+                cz *
+                CHUNK_SIZE +
+
+                randomRange(
+                    az,
+                    ax,
+                    15,
+                    CHUNK_SIZE - 15
+                );
+
+
+            const template =
+                buildingTemplates[
+
+                    Math.floor(
+
+                        hash2D(
+                            ax,
+                            az
+                        ) *
+                        buildingTemplates.length
+
+                    )
+
+                ];
+
+
+            if (
+                !template
+            ) {
+
+                continue;
+            }
+
+
+            const rotations = [
+
+                0,
+
+                Math.PI / 2,
+
+                Math.PI,
+
+                Math.PI * 1.5
+
             ];
 
 
-        const scale =
-            0.75 +
-            hash2D(
-                seedX + 100,
-                seedZ + 120
-            ) *
-            0.5;
+            const rotation =
+                rotations[
+
+                    Math.floor(
+
+                        hash2D(
+                            ax + 50,
+                            az + 80
+                        ) *
+                        rotations.length
+
+                    )
+
+                ];
 
 
-        const halfX =
-            template.width *
-            scale /
-            2;
+            const scale =
+                0.72 +
+
+                hash2D(
+                    ax + 100,
+                    az + 120
+                ) *
+                0.5;
 
 
-        const halfZ =
-            template.depth *
-            scale /
-            2;
+            const halfX =
+                template.width *
+                scale /
+                2;
 
 
-        if (
-            buildingTouchesRoad(
+            const halfZ =
+                template.depth *
+                scale /
+                2;
+
+
+            if (
+                buildingTouchesRoad(
+
+                    x,
+                    z,
+                    halfX,
+                    halfZ,
+                    rotation
+
+                )
+            ) {
+
+                continue;
+            }
+
+
+            if (
+                buildingTouchesBuilding(
+
+                    x,
+                    z,
+                    halfX,
+                    halfZ,
+                    rotation,
+                    placed
+
+                )
+            ) {
+
+                continue;
+            }
+
+
+            /*
+               Mountain terrain is not suitable
+               for normal city buildings.
+            */
+
+            if (
+                biome ===
+                "mountain"
+            ) {
+
+                continue;
+            }
+
+
+            addBuilding(
+
+                group,
+
+                template,
+
                 x,
                 z,
-                halfX,
-                halfZ,
+
+                scale,
+
                 rotation
-            )
-        ) {
 
-            continue;
+            );
+
+
+            placed.push({
+
+                x:
+                    x,
+
+                z:
+                    z,
+
+                halfX:
+                    halfX,
+
+                halfZ:
+                    halfZ
+
+            });
+
+
+            placedSuccessfully =
+                true;
         }
-
-
-        addBuilding(
-            group,
-            template,
-            x,
-            z,
-            scale,
-            rotation
-        );
     }
 }
 
 
 /* =========================================================
-   TREES
+   TREE
 ========================================================= */
 
 function createTree(
@@ -2169,31 +3404,46 @@ function createTree(
     scale
 ) {
 
+    const ground =
+        terrainHeight(
+            x,
+            z
+        );
+
+
     const trunk =
         new THREE.Mesh(
 
             new THREE.CylinderGeometry(
-                .18 * scale,
-                .28 * scale,
-                2.5 * scale,
+
+                .18 *
+                scale,
+
+                .28 *
+                scale,
+
+                2.5 *
+                scale,
+
                 7
+
             ),
 
-            new THREE.MeshStandardMaterial({
-                color: 0x5b3e29,
-                roughness: 1
-            })
+            trunkMaterial
+
         );
 
 
     trunk.position.set(
+
         x,
-        terrainHeight(
-            x,
-            z
-        ) +
-        1.25 * scale,
+
+        ground +
+        1.25 *
+        scale,
+
         z
+
     );
 
 
@@ -2210,26 +3460,31 @@ function createTree(
         new THREE.Mesh(
 
             new THREE.SphereGeometry(
-                1.5 * scale,
+
+                1.5 *
+                scale,
+
                 8,
+
                 6
+
             ),
 
-            new THREE.MeshStandardMaterial({
-                color: 0x355c35,
-                roughness: 1
-            })
+            leafMaterial
+
         );
 
 
     leaves.position.set(
+
         x,
-        terrainHeight(
-            x,
-            z
-        ) +
-        3.1 * scale,
+
+        ground +
+        3.1 *
+        scale,
+
         z
+
     );
 
 
@@ -2244,7 +3499,110 @@ function createTree(
 
 
 /* =========================================================
-   GENERATE TREES
+   TREE ROAD CLEARANCE
+========================================================= */
+
+function treeNearRoad(
+    x,
+    z
+) {
+
+    const testRadius =
+        TREE_ROAD_CLEARANCE;
+
+
+    const steps =
+        5;
+
+
+    for (
+        let dx =
+            -testRadius;
+
+        dx <=
+            testRadius;
+
+        dx +=
+            steps
+    ) {
+
+        for (
+            let dz =
+                -testRadius;
+
+            dz <=
+                testRadius;
+
+            dz +=
+                steps
+        ) {
+
+            if (
+                dx * dx +
+                dz * dz >
+                testRadius *
+                testRadius
+            ) {
+
+                continue;
+            }
+
+
+            if (
+                getRoadAt(
+                    x + dx,
+                    z + dz
+                )
+            ) {
+
+                return true;
+            }
+        }
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   TREE BUILDING CLEARANCE
+========================================================= */
+
+function treeNearBuilding(
+    x,
+    z
+) {
+
+    /*
+       Approximate check against building-like
+       zones based on nearby city roads.
+
+       This keeps trees away from the most
+       developed parts of the city.
+    */
+
+    const road =
+        getRoadAt(
+            x,
+            z
+        );
+
+
+    if (
+        road
+    ) {
+
+        return true;
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   TREES
 ========================================================= */
 
 function generateTrees(
@@ -2254,34 +3612,43 @@ function generateTrees(
 ) {
 
     const startX =
-        cx * CHUNK_SIZE;
+        cx *
+        CHUNK_SIZE;
 
 
     const startZ =
-        cz * CHUNK_SIZE;
+        cz *
+        CHUNK_SIZE;
+
+
+    const centerX =
+        startX +
+        CHUNK_SIZE / 2;
+
+
+    const centerZ =
+        startZ +
+        CHUNK_SIZE / 2;
 
 
     const biome =
         getBiome(
-            startX +
-            CHUNK_SIZE / 2,
-            startZ +
-            CHUNK_SIZE / 2
+            centerX,
+            centerZ
         );
 
 
     let amount =
-        biome === "city"
-            ? 8
-            : 18;
-
-
-    if (
-        biome === "mountain"
-    ) {
-
-        amount = 12;
-    }
+        biome ===
+        "city"
+            ? 18
+            : biome ===
+              "mountain"
+                ? 16
+                : biome ===
+                  "coast"
+                    ? 10
+                    : 28;
 
 
     for (
@@ -2291,39 +3658,51 @@ function generateTrees(
     ) {
 
         const sx =
-            cx * 200 +
-            cz * 37 +
-            i * 71;
+            cx *
+            200 +
+            cz *
+            37 +
+            i *
+            71;
 
 
         const sz =
-            cz * 200 +
-            cx * 43 +
-            i * 29;
+            cz *
+            200 +
+            cx *
+            43 +
+            i *
+            29;
 
 
         const x =
             startX +
+
             randomRange(
                 sx,
                 sz,
-                5,
-                CHUNK_SIZE - 5
+                6,
+                CHUNK_SIZE - 6
             );
 
 
         const z =
             startZ +
+
             randomRange(
                 sz,
                 sx,
-                5,
-                CHUNK_SIZE - 5
+                6,
+                CHUNK_SIZE - 6
             );
 
 
+        /*
+           Never place trees on roads.
+        */
+
         if (
-            getRoadAt(
+            treeNearRoad(
                 x,
                 z
             )
@@ -2333,20 +3712,36 @@ function generateTrees(
         }
 
 
+        /*
+           City trees are restricted to open
+           areas and sidewalks.
+        */
+
         if (
-            biome === "city" &&
-            hash2D(
-                sx,
-                sz
-            ) > .35
+            biome ===
+            "city"
         ) {
 
-            continue;
+            const cityNoise =
+                hash2D(
+                    sx + 200,
+                    sz + 200
+                );
+
+
+            if (
+                cityNoise >
+                0.32
+            ) {
+
+                continue;
+            }
         }
 
 
         const scale =
             0.7 +
+
             hash2D(
                 sx + 100,
                 sz + 100
@@ -2355,10 +3750,362 @@ function generateTrees(
 
 
         createTree(
+
             group,
+
             x,
             z,
+
             scale
+
+        );
+    }
+}
+
+
+/* =========================================================
+   BUSH
+========================================================= */
+
+function createBush(
+    group,
+    x,
+    z,
+    scale
+) {
+
+    const bush =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+
+                0.9 *
+                scale,
+
+                7,
+
+                5
+
+            ),
+
+            bushMaterial
+
+        );
+
+
+    bush.position.set(
+
+        x,
+
+        terrainHeight(
+            x,
+            z
+        ) +
+        0.65 *
+        scale,
+
+        z
+
+    );
+
+
+    bush.scale.y =
+        0.65;
+
+
+    bush.castShadow =
+        true;
+
+
+    group.add(
+        bush
+    );
+}
+
+
+/* =========================================================
+   BUSH GENERATION
+========================================================= */
+
+function generateBushes(
+    group,
+    cx,
+    cz
+) {
+
+    const biome =
+        getBiome(
+
+            cx *
+            CHUNK_SIZE +
+            CHUNK_SIZE / 2,
+
+            cz *
+            CHUNK_SIZE +
+            CHUNK_SIZE / 2
+
+        );
+
+
+    if (
+        biome ===
+        "city"
+    ) {
+
+        return;
+    }
+
+
+    for (
+        let i = 0;
+        i < 15;
+        i++
+    ) {
+
+        const sx =
+            cx *
+            500 +
+            i *
+            91;
+
+
+        const sz =
+            cz *
+            500 +
+            i *
+            47;
+
+
+        const x =
+            cx *
+            CHUNK_SIZE +
+
+            randomRange(
+                sx,
+                sz,
+                8,
+                CHUNK_SIZE - 8
+            );
+
+
+        const z =
+            cz *
+            CHUNK_SIZE +
+
+            randomRange(
+                sz,
+                sx,
+                8,
+                CHUNK_SIZE - 8
+            );
+
+
+        if (
+            treeNearRoad(
+                x,
+                z
+            )
+        ) {
+
+            continue;
+        }
+
+
+        createBush(
+
+            group,
+
+            x,
+            z,
+
+            0.6 +
+            hash2D(
+                sx,
+                sz
+            ) *
+            0.8
+
+        );
+    }
+}
+
+
+/* =========================================================
+   ROCK
+========================================================= */
+
+function createRock(
+    group,
+    x,
+    z,
+    scale
+) {
+
+    const rock =
+        new THREE.Mesh(
+
+            new THREE.DodecahedronGeometry(
+                1,
+                0
+            ),
+
+            rockMaterial
+
+        );
+
+
+    rock.scale.set(
+
+        scale,
+
+        scale *
+        0.65,
+
+        scale *
+        0.85
+
+    );
+
+
+    rock.rotation.y =
+        hash2D(
+            x,
+            z
+        ) *
+        Math.PI;
+
+
+    rock.position.set(
+
+        x,
+
+        terrainHeight(
+            x,
+            z
+        ) +
+        scale *
+        0.35,
+
+        z
+
+    );
+
+
+    rock.castShadow =
+        true;
+
+
+    rock.receiveShadow =
+        true;
+
+
+    group.add(
+        rock
+    );
+}
+
+
+/* =========================================================
+   ROCK GENERATION
+========================================================= */
+
+function generateRocks(
+    group,
+    cx,
+    cz
+) {
+
+    const biome =
+        getBiome(
+
+            cx *
+            CHUNK_SIZE +
+            CHUNK_SIZE / 2,
+
+            cz *
+            CHUNK_SIZE +
+            CHUNK_SIZE / 2
+
+        );
+
+
+    let amount =
+        biome ===
+        "mountain"
+            ? 18
+            : 7;
+
+
+    for (
+        let i = 0;
+        i < amount;
+        i++
+    ) {
+
+        const sx =
+            cx *
+            800 +
+            i *
+            61;
+
+
+        const sz =
+            cz *
+            800 +
+            i *
+            83;
+
+
+        const x =
+            cx *
+            CHUNK_SIZE +
+
+            randomRange(
+                sx,
+                sz,
+                8,
+                CHUNK_SIZE - 8
+            );
+
+
+        const z =
+            cz *
+            CHUNK_SIZE +
+
+            randomRange(
+                sz,
+                sx,
+                8,
+                CHUNK_SIZE - 8
+            );
+
+
+        if (
+            treeNearRoad(
+                x,
+                z
+            )
+        ) {
+
+            continue;
+        }
+
+
+        createRock(
+
+            group,
+
+            x,
+
+            z,
+
+            0.5 +
+            hash2D(
+                sx,
+                sz
+            ) *
+            1.2
+
         );
     }
 }
@@ -2375,12 +4122,14 @@ function generateMountains(
 ) {
 
     const centerX =
-        cx * CHUNK_SIZE +
+        cx *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
     const centerZ =
-        cz * CHUNK_SIZE +
+        cz *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
@@ -2388,7 +4137,8 @@ function generateMountains(
         getBiome(
             centerX,
             centerZ
-        ) !== "mountain"
+        ) !==
+        "mountain"
     ) {
 
         return;
@@ -2397,74 +4147,112 @@ function generateMountains(
 
     for (
         let i = 0;
-        i < 3;
+        i < 4;
         i++
     ) {
 
         const x =
-            cx * CHUNK_SIZE +
+            cx *
+            CHUNK_SIZE +
+
             randomRange(
-                cx * 80 + i,
-                cz * 90 + i,
+                cx * 80 +
+                i,
+
+                cz * 90 +
+                i,
+
                 15,
-                CHUNK_SIZE - 15
+
+                CHUNK_SIZE -
+                15
+
             );
 
 
         const z =
-            cz * CHUNK_SIZE +
+            cz *
+            CHUNK_SIZE +
+
             randomRange(
-                cz * 80 + i,
-                cx * 90 + i,
+                cz * 80 +
+                i,
+
+                cx * 90 +
+                i,
+
                 15,
-                CHUNK_SIZE - 15
+
+                CHUNK_SIZE -
+                15
+
             );
 
 
         const height =
-            30 +
+            35 +
+
             hash2D(
                 x,
                 z
             ) *
-            70;
+            85;
 
 
         const radius =
             20 +
+
             hash2D(
                 z,
                 x
             ) *
-            35;
+            38;
 
 
         const mountain =
             new THREE.Mesh(
 
                 new THREE.ConeGeometry(
+
                     radius,
+
                     height,
-                    8
+
+                    9
+
                 ),
 
                 mountainMaterial
+
             );
 
 
         mountain.position.set(
+
             x,
+
             terrainHeight(
                 x,
                 z
             ) +
             height / 2,
+
             z
+
         );
+
+
+        mountain.rotation.y =
+            hash2D(
+                x,
+                z
+            ) *
+            Math.PI;
 
 
         mountain.castShadow =
             true;
+
 
         mountain.receiveShadow =
             true;
@@ -2488,29 +4276,32 @@ function generateWater(
 ) {
 
     const centerX =
-        cx * CHUNK_SIZE +
+        cx *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
     const centerZ =
-        cz * CHUNK_SIZE +
+        cz *
+        CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
 
-    const coast =
+    const coastNoise =
         Math.sin(
             centerX *
-            .0007
+            0.0007
         ) +
 
         Math.cos(
             centerZ *
-            .0006
+            0.0006
         );
 
 
     if (
-        coast < 1.55
+        coastNoise <
+        1.55
     ) {
 
         return;
@@ -2520,15 +4311,21 @@ function generateWater(
     const waterMaterial =
         new THREE.MeshStandardMaterial({
 
-            color: 0x3e83a5,
+            color:
+                0x3e83a5,
 
-            roughness: .2,
+            roughness:
+                .2,
 
-            metalness: .1,
+            metalness:
+                .1,
 
-            transparent: true,
+            transparent:
+                true,
 
-            opacity: .88
+            opacity:
+                .88
+
         });
 
 
@@ -2536,11 +4333,15 @@ function generateWater(
         new THREE.Mesh(
 
             new THREE.PlaneGeometry(
+
                 CHUNK_SIZE,
+
                 CHUNK_SIZE
+
             ),
 
             waterMaterial
+
         );
 
 
@@ -2549,9 +4350,13 @@ function generateWater(
 
 
     water.position.set(
+
         centerX,
-        0,
+
+        -0.5,
+
         centerZ
+
     );
 
 
@@ -2562,7 +4367,7 @@ function generateWater(
 
 
 /* =========================================================
-   GENERATE CHUNK
+   CHUNK
 ========================================================= */
 
 function generateChunk(
@@ -2571,11 +4376,15 @@ function generateChunk(
 ) {
 
     const key =
-        cx + "," + cz;
+        cx +
+        "," +
+        cz;
 
 
     if (
-        chunks.has(key)
+        chunks.has(
+            key
+        )
     ) {
 
         return;
@@ -2589,74 +4398,127 @@ function generateChunk(
     group.userData.cx =
         cx;
 
+
     group.userData.cz =
         cz;
 
 
     /*
-       TERRAIN
+       Terrain
     */
 
     group.add(
+
         createTerrainChunk(
             cx,
             cz
         )
+
     );
 
 
     /*
-       ROADS
+       Roads
     */
 
     generateRoads(
+
         group,
+
         cx,
+
         cz
+
     );
 
 
     /*
-       BUILDINGS
+       Buildings
     */
 
     generateBuildings(
+
         group,
+
         cx,
+
         cz
+
     );
 
 
     /*
-       TREES
+       Trees
     */
 
     generateTrees(
+
         group,
+
         cx,
+
         cz
+
     );
 
 
     /*
-       MOUNTAINS
+       Bushes
+    */
+
+    generateBushes(
+
+        group,
+
+        cx,
+
+        cz
+
+    );
+
+
+    /*
+       Rocks
+    */
+
+    generateRocks(
+
+        group,
+
+        cx,
+
+        cz
+
+    );
+
+
+    /*
+       Mountains
     */
 
     generateMountains(
+
         group,
+
         cx,
+
         cz
+
     );
 
 
     /*
-       WATER
+       Water
     */
 
     generateWater(
+
         group,
+
         cx,
+
         cz
+
     );
 
 
@@ -2673,7 +4535,7 @@ function generateChunk(
 
 
 /* =========================================================
-   DISPOSE CHUNK
+   DISPOSE
 ========================================================= */
 
 function disposeGroup(
@@ -2689,13 +4551,14 @@ function disposeGroup(
 
                 object.geometry.dispose();
             }
+
         }
     );
 }
 
 
 /* =========================================================
-   UNLOAD FAR CHUNKS
+   UNLOAD
 ========================================================= */
 
 function unloadFarChunks(
@@ -2727,21 +4590,26 @@ function unloadFarChunks(
 
         const dx =
             Math.abs(
+
                 group.userData.cx -
                 playerCX
+
             );
 
 
         const dz =
             Math.abs(
+
                 group.userData.cz -
                 playerCZ
+
             );
 
 
         if (
             dx >
             UNLOAD_RADIUS ||
+
             dz >
             UNLOAD_RADIUS
         ) {
@@ -2771,11 +4639,20 @@ function unloadFarChunks(
 let lastChunkX =
     null;
 
+
 let lastChunkZ =
     null;
 
 
 function updateWorldStreaming() {
+
+    if (
+        !carRoot
+    ) {
+
+        return;
+    }
+
 
     const playerX =
         carRoot.position.x;
@@ -2800,8 +4677,11 @@ function updateWorldStreaming() {
 
 
     if (
-        cx === lastChunkX &&
-        cz === lastChunkZ
+        cx ===
+        lastChunkX &&
+
+        cz ===
+        lastChunkZ
     ) {
 
         return;
@@ -2811,22 +4691,32 @@ function updateWorldStreaming() {
     lastChunkX =
         cx;
 
+
     lastChunkZ =
         cz;
 
 
-    const required = [];
+    const required =
+        [];
 
 
     for (
-        let x = -LOAD_RADIUS;
-        x <= LOAD_RADIUS;
+        let x =
+            -LOAD_RADIUS;
+
+        x <=
+            LOAD_RADIUS;
+
         x++
     ) {
 
         for (
-            let z = -LOAD_RADIUS;
-            z <= LOAD_RADIUS;
+            let z =
+                -LOAD_RADIUS;
+
+            z <=
+                LOAD_RADIUS;
+
             z++
         ) {
 
@@ -2848,26 +4738,36 @@ function updateWorldStreaming() {
 
 
     required.sort(
+
         (a, b) =>
+
             a.distance -
             b.distance
+
     );
 
 
     for (
-        const chunk of required
+        const chunk
+        of required
     ) {
 
         generateChunk(
+
             chunk.cx,
+
             chunk.cz
+
         );
     }
 
 
     unloadFarChunks(
+
         playerX,
+
         playerZ
+
     );
 }
 
@@ -2898,7 +4798,7 @@ const carURL =
 
 
 /* =========================================================
-   LOAD CAR
+   CAR LOADING
 ========================================================= */
 
 async function loadCar() {
@@ -2916,6 +4816,7 @@ async function loadCar() {
 
 
         carModel.traverse(
+
             object => {
 
                 if (
@@ -2925,10 +4826,13 @@ async function loadCar() {
                     object.castShadow =
                         true;
 
+
                     object.receiveShadow =
                         true;
                 }
+
             }
+
         );
 
 
@@ -2950,9 +4854,13 @@ async function loadCar() {
 
         const maxDimension =
             Math.max(
+
                 size.x,
+
                 size.y,
+
                 size.z
+
             );
 
 
@@ -3008,28 +4916,29 @@ async function loadCar() {
 
 
         /*
-           Start on the major road.
-
-           The root is lifted above the terrain so the
-           bottom of the car does not spawn underneath
-           the road surface.
+           Spawn on the major road.
         */
 
         const startX =
             0;
+
 
         const startZ =
             40;
 
 
         carRoot.position.set(
+
             startX,
-            terrainHeight(
+
+            roadHeight(
                 startX,
                 startZ
             ) +
-            0.55,
+            0.25,
+
             startZ
+
         );
 
     }
@@ -3050,21 +4959,25 @@ async function loadCar() {
    INPUT
 ========================================================= */
 
-const keys = {};
+const keys =
+    {};
 
 
 window.addEventListener(
     "keydown",
     event => {
 
-        keys[
-            event.key.toLowerCase()
-        ] = true;
+        const key =
+            event.key.toLowerCase();
+
+
+        keys[key] =
+            true;
 
 
         if (
-            event.key.toLowerCase()
-            === "n"
+            key ===
+            "n"
         ) {
 
             toggleNight();
@@ -3079,7 +4992,8 @@ window.addEventListener(
 
         keys[
             event.key.toLowerCase()
-        ] = false;
+        ] =
+            false;
     }
 );
 
@@ -3088,34 +5002,45 @@ window.addEventListener(
    DRIVING
 ========================================================= */
 
-let speed = 0;
+let speed =
+    0;
 
-let steering = 0;
+
+let steering =
+    0;
 
 
 const MAX_SPEED =
     0.75;
 
+
 const MAX_REVERSE =
     0.28;
+
 
 const ACCELERATION =
     0.008;
 
+
 const REVERSE_ACCELERATION =
     0.005;
+
 
 const BRAKE_POWER =
     0.035;
 
+
 const FRICTION =
     0.006;
+
 
 const MAX_STEERING =
     0.55;
 
+
 const STEERING_RESPONSE =
     0.14;
+
 
 const TURN_RATE =
     0.035;
@@ -3155,18 +5080,18 @@ function updateCar() {
     ) {
 
         if (
-            speed > 0
+            speed >
+            0
         ) {
 
             speed -=
                 BRAKE_POWER;
 
-        }
-
-        else {
+        } else {
 
             speed -=
                 REVERSE_ACCELERATION;
+
         }
 
     }
@@ -3174,7 +5099,8 @@ function updateCar() {
     else {
 
         if (
-            speed > 0
+            speed >
+            0
         ) {
 
             speed -=
@@ -3182,16 +5108,17 @@ function updateCar() {
 
 
             if (
-                speed < 0
+                speed <
+                0
             ) {
 
-                speed = 0;
+                speed =
+                    0;
             }
 
-        }
-
-        else if (
-            speed < 0
+        } else if (
+            speed <
+            0
         ) {
 
             speed +=
@@ -3199,10 +5126,12 @@ function updateCar() {
 
 
             if (
-                speed > 0
+                speed >
+                0
             ) {
 
-                speed = 0;
+                speed =
+                    0;
             }
         }
     }
@@ -3210,9 +5139,13 @@ function updateCar() {
 
     speed =
         THREE.MathUtils.clamp(
+
             speed,
+
             -MAX_REVERSE,
+
             MAX_SPEED
+
         );
 
 
@@ -3246,9 +5179,13 @@ function updateCar() {
 
     steering =
         THREE.MathUtils.lerp(
+
             steering,
+
             targetSteering,
+
             STEERING_RESPONSE
+
         );
 
 
@@ -3257,20 +5194,29 @@ function updateCar() {
     */
 
     if (
-        Math.abs(speed) >
+        Math.abs(
+            speed
+        ) >
         0.02
     ) {
 
         const direction =
-            speed >= 0
+            speed >=
+            0
                 ? 1
                 : -1;
 
 
         carRoot.rotation.y +=
+
             steering *
+
             TURN_RATE *
-            Math.abs(speed) *
+
+            Math.abs(
+                speed
+            ) *
+
             direction;
     }
 
@@ -3281,9 +5227,13 @@ function updateCar() {
 
     const forward =
         new THREE.Vector3(
+
             0,
+
             0,
+
             -1
+
         );
 
 
@@ -3293,32 +5243,67 @@ function updateCar() {
 
 
     carRoot.position.addScaledVector(
+
         forward,
+
         speed
+
     );
 
 
     /*
-       TERRAIN FOLLOWING
+       GROUND / ROAD FOLLOWING
     */
 
-    const ground =
-        terrainHeight(
-            carRoot.position.x,
-            carRoot.position.z
+    const x =
+        carRoot.position.x;
+
+
+    const z =
+        carRoot.position.z;
+
+
+    const road =
+        getRoadAt(
+            x,
+            z
         );
 
 
-    /*
-       Keep the car above the terrain/road.
-    */
+    let targetGround;
+
+
+    if (
+        road
+    ) {
+
+        targetGround =
+            roadHeight(
+                x,
+                z
+            ) +
+            0.25;
+
+    } else {
+
+        targetGround =
+            terrainHeight(
+                x,
+                z
+            ) +
+            0.55;
+    }
+
 
     carRoot.position.y =
         THREE.MathUtils.lerp(
+
             carRoot.position.y,
-            ground +
-            0.55,
+
+            targetGround,
+
             0.25
+
         );
 
 
@@ -3331,8 +5316,13 @@ function updateCar() {
     ).textContent =
 
         Math.round(
-            Math.abs(speed) *
+
+            Math.abs(
+                speed
+            ) *
+
             55
+
         ) +
 
         " KM/H";
@@ -3347,9 +5337,13 @@ function updateCamera() {
 
     const offset =
         new THREE.Vector3(
+
             0,
+
             4.2,
+
             10.5
+
         );
 
 
@@ -3367,8 +5361,11 @@ function updateCamera() {
 
 
     camera.position.lerp(
+
         desired,
+
         0.075
+
     );
 
 
@@ -3446,11 +5443,11 @@ function toggleNight() {
 
 
         hemisphere.intensity =
-            1.6;
+            1.65;
 
 
         sun.intensity =
-            2.5;
+            2.7;
 
 
         sun.color.set(
@@ -3461,58 +5458,106 @@ function toggleNight() {
 
 
 /* =========================================================
-   INITIAL WORLD
+   START GAME
 ========================================================= */
 
 async function startGame() {
 
     /*
-       BUILDINGS
+       Buildings first.
     */
 
     await loadBuildings();
 
 
     /*
-       CAR
+       Car.
     */
 
     await loadCar();
 
 
     /*
-       INITIAL WORLD
+       Initial world.
+
+       Generate closest chunks first.
     */
 
+    const initialChunks =
+        [];
+
+
     for (
-        let x = -LOAD_RADIUS;
-        x <= LOAD_RADIUS;
+        let x =
+            -LOAD_RADIUS;
+
+        x <=
+            LOAD_RADIUS;
+
         x++
     ) {
 
         for (
-            let z = -LOAD_RADIUS;
-            z <= LOAD_RADIUS;
+            let z =
+                -LOAD_RADIUS;
+
+            z <=
+                LOAD_RADIUS;
+
             z++
         ) {
 
-            generateChunk(
-                x,
-                z
-            );
+            initialChunks.push({
+
+                cx:
+                    x,
+
+                cz:
+                    z,
+
+                distance:
+                    Math.abs(x) +
+                    Math.abs(z)
+
+            });
         }
+    }
+
+
+    initialChunks.sort(
+
+        (a, b) =>
+            a.distance -
+            b.distance
+
+    );
+
+
+    for (
+        const chunk
+        of initialChunks
+    ) {
+
+        generateChunk(
+
+            chunk.cx,
+
+            chunk.cz
+
+        );
     }
 
 
     lastChunkX =
         0;
 
+
     lastChunkZ =
         0;
 
 
     /*
-       HIDE LOADING SCREEN
+       Hide loading.
     */
 
     const loading =
@@ -3526,13 +5571,16 @@ async function startGame() {
 
 
     setTimeout(
+
         () => {
 
             loading.style.display =
                 "none";
 
         },
+
         900
+
     );
 }
 
@@ -3550,7 +5598,9 @@ function animate() {
 
     updateCar();
 
+
     updateWorldStreaming();
+
 
     updateCamera();
 
@@ -3579,8 +5629,11 @@ window.addEventListener(
 
 
         renderer.setSize(
+
             window.innerWidth,
+
             window.innerHeight
+
         );
     }
 );
@@ -3593,6 +5646,7 @@ window.addEventListener(
 startGame();
 
 animate();
+
 
 </script>
 
