@@ -23,7 +23,7 @@ canvas {
 }
 
 /* =========================
-   LOADING SCREEN
+   LOADING
 ========================= */
 
 #loading {
@@ -42,7 +42,6 @@ canvas {
 #loading h1 {
     font-size: 72px;
     letter-spacing: 16px;
-    font-weight: 700;
 }
 
 #loading p {
@@ -57,14 +56,12 @@ canvas {
     height: 2px;
     background: #333;
     margin-top: 35px;
-    overflow: hidden;
 }
 
 #loadingProgress {
     width: 0%;
     height: 100%;
     background: white;
-    transition: width .2s;
 }
 
 /* =========================
@@ -201,6 +198,7 @@ canvas {
 
 </div>
 
+
 <script type="module">
 
 import * as THREE from
@@ -235,8 +233,8 @@ const camera =
 
 camera.position.set(
     0,
-    4,
-    8
+    4.2,
+    8.5
 );
 
 
@@ -265,7 +263,7 @@ renderer.shadowMap.type =
 renderer.toneMapping =
     THREE.ACESFilmicToneMapping;
 
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.15;
 
 document.body.appendChild(
     renderer.domElement
@@ -315,22 +313,16 @@ scene.add(skyLight);
    GROUND
 ===================================================== */
 
-const groundGeometry =
-    new THREE.PlaneGeometry(
-        1200,
-        1200
-    );
-
-const groundMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x3b403c,
-        roughness: 1
-    });
-
 const ground =
     new THREE.Mesh(
-        groundGeometry,
-        groundMaterial
+        new THREE.PlaneGeometry(
+            1200,
+            1200
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x3b403c,
+            roughness: 1
+        })
     );
 
 ground.rotation.x =
@@ -360,16 +352,13 @@ function createRoad(
     rotation = 0
 ) {
 
-    const geometry =
-        new THREE.BoxGeometry(
-            width,
-            0.12,
-            length
-        );
-
     const road =
         new THREE.Mesh(
-            geometry,
+            new THREE.BoxGeometry(
+                width,
+                0.12,
+                length
+            ),
             roadMaterial
         );
 
@@ -385,12 +374,8 @@ function createRoad(
     road.receiveShadow = true;
 
     scene.add(road);
-
-    return road;
 }
 
-
-/* Main roads */
 
 createRoad(
     0,
@@ -406,8 +391,6 @@ createRoad(
     24
 );
 
-
-/* Smaller roads */
 
 for (
     let x = -300;
@@ -434,14 +417,13 @@ for (
         0,
         z,
         1200,
-        12,
-        0
+        12
     );
 }
 
 
 /* =====================================================
-   ROAD LINES
+   ROAD MARKINGS
 ===================================================== */
 
 const lineMaterial =
@@ -457,16 +439,13 @@ function createLine(
     length
 ) {
 
-    const geometry =
-        new THREE.BoxGeometry(
-            width,
-            0.02,
-            length
-        );
-
     const line =
         new THREE.Mesh(
-            geometry,
+            new THREE.BoxGeometry(
+                width,
+                0.025,
+                length
+            ),
             lineMaterial
         );
 
@@ -532,13 +511,6 @@ function createBuilding(
     height
 ) {
 
-    const geometry =
-        new THREE.BoxGeometry(
-            width,
-            height,
-            depth
-        );
-
     const material =
         buildingMaterials[
             Math.floor(
@@ -547,9 +519,14 @@ function createBuilding(
             )
         ];
 
+
     const building =
         new THREE.Mesh(
-            geometry,
+            new THREE.BoxGeometry(
+                width,
+                height,
+                depth
+            ),
             material
         );
 
@@ -565,18 +542,13 @@ function createBuilding(
     scene.add(building);
 
 
-    /* Roof */
-
-    const roofGeometry =
-        new THREE.BoxGeometry(
-            width + .2,
-            .15,
-            depth + .2
-        );
-
     const roof =
         new THREE.Mesh(
-            roofGeometry,
+            new THREE.BoxGeometry(
+                width + .2,
+                .15,
+                depth + .2
+            ),
             new THREE.MeshStandardMaterial({
                 color: 0x292929
             })
@@ -593,8 +565,6 @@ function createBuilding(
     scene.add(roof);
 }
 
-
-/* City blocks */
 
 for (
     let x = -320;
@@ -713,7 +683,7 @@ for (
 
 
 /* =====================================================
-   CAR
+   HORIZON V2 — SPORTS CAR
 ===================================================== */
 
 const car =
@@ -729,26 +699,143 @@ car.position.set(
 
 
 /* =====================================================
-   CAR BODY
+   MATERIALS
+===================================================== */
+
+const paint =
+    new THREE.MeshPhysicalMaterial({
+        color: 0x9b111e,
+        metalness: 0.85,
+        roughness: 0.18,
+        clearcoat: 1,
+        clearcoatRoughness: 0.08
+    });
+
+
+const darkPaint =
+    new THREE.MeshStandardMaterial({
+        color: 0x08090a,
+        metalness: 0.7,
+        roughness: 0.2
+    });
+
+
+const glass =
+    new THREE.MeshPhysicalMaterial({
+        color: 0x101820,
+        metalness: 0.15,
+        roughness: 0.08,
+        transmission: 0.05,
+        transparent: true,
+        opacity: 0.78
+    });
+
+
+const tireMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x070707,
+        roughness: 0.85
+    });
+
+
+const rimMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x8c8c8c,
+        metalness: 0.9,
+        roughness: 0.18
+    });
+
+
+const headlightMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 3
+    });
+
+
+const tailMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x330000,
+        emissive: 0xff0000,
+        emissiveIntensity: 2
+    });
+
+
+/* =====================================================
+   MAIN LOWER BODY
 ===================================================== */
 
 const body =
     new THREE.Mesh(
         new THREE.BoxGeometry(
-            2.2,
-            .55,
-            4.5
+            2.35,
+            0.52,
+            4.55
         ),
-        new THREE.MeshStandardMaterial({
-            color: 0x8d1010,
-            metalness: .75,
-            roughness: .22
-        })
+        paint
     );
+
+body.position.y = 0;
 
 body.castShadow = true;
 
 car.add(body);
+
+
+/* =====================================================
+   FRONT NOSE
+===================================================== */
+
+const nose =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            2.18,
+            0.34,
+            1.05
+        ),
+        paint
+    );
+
+nose.position.set(
+    0,
+    -0.02,
+    -2.25
+);
+
+nose.scale.x = 0.95;
+
+nose.castShadow = true;
+
+car.add(nose);
+
+
+/* =====================================================
+   HOOD
+===================================================== */
+
+const hood =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            2.05,
+            0.16,
+            1.55
+        ),
+        paint
+    );
+
+hood.position.set(
+    0,
+    0.29,
+    -1.45
+);
+
+hood.rotation.x =
+    -0.035;
+
+hood.castShadow = true;
+
+car.add(hood);
 
 
 /* =====================================================
@@ -758,22 +845,18 @@ car.add(body);
 const cabin =
     new THREE.Mesh(
         new THREE.BoxGeometry(
-            1.75,
-            .65,
-            2.1
+            1.78,
+            0.7,
+            2.05
         ),
-        new THREE.MeshStandardMaterial({
-            color: 0x151719,
-            metalness: .3,
-            roughness: .2
-        })
+        darkPaint
     );
 
-cabin.position.y =
-    .55;
-
-cabin.position.z =
-    -.15;
+cabin.position.set(
+    0,
+    0.56,
+    0.05
+);
 
 cabin.castShadow = true;
 
@@ -781,89 +864,460 @@ car.add(cabin);
 
 
 /* =====================================================
+   WINDSHIELD
+===================================================== */
+
+const windshield =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.58,
+            0.52,
+            0.08
+        ),
+        glass
+    );
+
+windshield.position.set(
+    0,
+    0.72,
+    -0.87
+);
+
+windshield.rotation.x =
+    -0.25;
+
+car.add(windshield);
+
+
+/* =====================================================
+   REAR WINDOW
+===================================================== */
+
+const rearWindow =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.58,
+            0.48,
+            0.08
+        ),
+        glass
+    );
+
+rearWindow.position.set(
+    0,
+    0.72,
+    0.95
+);
+
+rearWindow.rotation.x =
+    0.25;
+
+car.add(rearWindow);
+
+
+/* =====================================================
+   SIDE WINDOWS
+===================================================== */
+
+function createSideWindow(
+    x
+) {
+
+    const window =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.05,
+                0.48,
+                1.45
+            ),
+            glass
+        );
+
+    window.position.set(
+        x,
+        0.72,
+        0.05
+    );
+
+    car.add(window);
+}
+
+
+createSideWindow(-0.9);
+createSideWindow(0.9);
+
+
+/* =====================================================
+   SIDE SKIRTS
+===================================================== */
+
+function createSideSkirt(
+    x
+) {
+
+    const skirt =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.12,
+                0.22,
+                3.4
+            ),
+            darkPaint
+        );
+
+    skirt.position.set(
+        x,
+        -0.23,
+        0
+    );
+
+    car.add(skirt);
+}
+
+
+createSideSkirt(-1.17);
+createSideSkirt(1.17);
+
+
+/* =====================================================
+   FRONT SPLITTER
+===================================================== */
+
+const splitter =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            2.25,
+            0.08,
+            0.32
+        ),
+        darkPaint
+    );
+
+splitter.position.set(
+    0,
+    -0.27,
+    -2.28
+);
+
+car.add(splitter);
+
+
+/* =====================================================
+   REAR DIFFUSER
+===================================================== */
+
+const diffuser =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            2.1,
+            0.14,
+            0.32
+        ),
+        darkPaint
+    );
+
+diffuser.position.set(
+    0,
+    -0.25,
+    2.2
+);
+
+car.add(diffuser);
+
+
+/* =====================================================
+   HEADLIGHTS
+===================================================== */
+
+function createHeadlight(
+    x
+) {
+
+    const light =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.48,
+                0.12,
+                0.08
+            ),
+            headlightMaterial
+        );
+
+    light.position.set(
+        x,
+        0.22,
+        -2.29
+    );
+
+    car.add(light);
+
+
+    const glow =
+        new THREE.PointLight(
+            0xffffff,
+            0.8,
+            12
+        );
+
+    glow.position.set(
+        x,
+        0.25,
+        -2.35
+    );
+
+    car.add(glow);
+}
+
+
+createHeadlight(-0.72);
+createHeadlight(0.72);
+
+
+/* =====================================================
+   TAILLIGHTS
+===================================================== */
+
+function createTaillight(
+    x
+) {
+
+    const light =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.7,
+                0.13,
+                0.08
+            ),
+            tailMaterial
+        );
+
+    light.position.set(
+        x,
+        0.24,
+        2.28
+    );
+
+    car.add(light);
+}
+
+
+createTaillight(-0.72);
+createTaillight(0.72);
+
+
+/* =====================================================
+   SIDE MIRRORS
+===================================================== */
+
+function createMirror(
+    x
+) {
+
+    const mirror =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.18,
+                0.14,
+                0.32
+            ),
+            paint
+        );
+
+    mirror.position.set(
+        x,
+        0.65,
+        -0.58
+    );
+
+    mirror.rotation.y =
+        x > 0
+            ? -0.15
+            : 0.15;
+
+    mirror.castShadow = true;
+
+    car.add(mirror);
+}
+
+
+createMirror(-1.05);
+createMirror(1.05);
+
+
+/* =====================================================
+   SPOILER
+===================================================== */
+
+const spoilerWing =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.8,
+            0.1,
+            0.22
+        ),
+        darkPaint
+    );
+
+spoilerWing.position.set(
+    0,
+    0.88,
+    1.95
+);
+
+car.add(spoilerWing);
+
+
+function createSpoilerSupport(
+    x
+) {
+
+    const support =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.08,
+                0.4,
+                0.08
+            ),
+            darkPaint
+        );
+
+    support.position.set(
+        x,
+        0.68,
+        1.95
+    );
+
+    car.add(support);
+}
+
+
+createSpoilerSupport(-0.65);
+createSpoilerSupport(0.65);
+
+
+/* =====================================================
    WHEELS
 ===================================================== */
 
-const wheelGeometry =
-    new THREE.CylinderGeometry(
-        .42,
-        .42,
-        .28,
-        24
-    );
-
-const wheelMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x101010,
-        roughness: .8
-    });
-
-
 const wheels = [];
+
+const frontWheels = [];
 
 
 function createWheel(
     x,
-    z
+    z,
+    isFront
 ) {
 
-    const wheel =
-        new THREE.Mesh(
-            wheelGeometry,
-            wheelMaterial
-        );
+    const wheelGroup =
+        new THREE.Group();
 
-    wheel.rotation.z =
-        Math.PI / 2;
-
-    wheel.position.set(
+    wheelGroup.position.set(
         x,
-        -.28,
+        -0.28,
         z
     );
 
-    wheel.castShadow = true;
+    car.add(wheelGroup);
 
-    car.add(wheel);
 
-    wheels.push(wheel);
+    const tire =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.46,
+                0.46,
+                0.32,
+                32
+            ),
+            tireMaterial
+        );
+
+    tire.rotation.z =
+        Math.PI / 2;
+
+    tire.castShadow = true;
+
+    wheelGroup.add(tire);
+
+
+    const rim =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.27,
+                0.27,
+                0.34,
+                20
+            ),
+            rimMaterial
+        );
+
+    rim.rotation.z =
+        Math.PI / 2;
+
+    wheelGroup.add(rim);
+
+
+    const hub =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.09,
+                0.09,
+                0.36,
+                16
+            ),
+            darkPaint
+        );
+
+    hub.rotation.z =
+        Math.PI / 2;
+
+    wheelGroup.add(hub);
+
+
+    wheels.push({
+        group: wheelGroup,
+        tire: tire,
+        rim: rim
+    });
+
+
+    if (isFront) {
+        frontWheels.push(
+            wheelGroup
+        );
+    }
 }
 
 
-/* Front wheels */
+/* Front */
 
 createWheel(
-    -1.15,
-    -1.45
+    -1.18,
+    -1.48,
+    true
 );
 
 createWheel(
-    1.15,
-    -1.45
+    1.18,
+    -1.48,
+    true
 );
 
 
-/* Rear wheels */
+/* Rear */
 
 createWheel(
-    -1.15,
-    1.45
+    -1.18,
+    1.48,
+    false
 );
 
 createWheel(
-    1.15,
-    1.45
+    1.18,
+    1.48,
+    false
 );
-
-
-/* =====================================================
-   FRONT WHEELS
-===================================================== */
-
-const frontWheels = [
-    wheels[0],
-    wheels[1]
-];
 
 
 /* =====================================================
@@ -883,7 +1337,7 @@ function createTrafficCar(
         new THREE.Mesh(
             new THREE.BoxGeometry(
                 1.8,
-                .55,
+                0.55,
                 4
             ),
             new THREE.MeshStandardMaterial({
@@ -949,6 +1403,8 @@ for (
 
 const keys = {};
 
+let nightMode = false;
+
 
 window.addEventListener(
     "keydown",
@@ -986,17 +1442,13 @@ window.addEventListener(
 
 
 /* =====================================================
-   DRIVING PHYSICS — HORIZON V2
+   DRIVING PHYSICS
 ===================================================== */
 
 let speed = 0;
 
 let steering = 0;
 
-let nightMode = false;
-
-
-/* Car tuning */
 
 const maxSpeed = 1.8;
 
@@ -1018,7 +1470,7 @@ const turnStrength = 0.035;
 
 
 /* =====================================================
-   UPDATE CAR
+   CAR UPDATE
 ===================================================== */
 
 function updateCar() {
@@ -1043,9 +1495,7 @@ function updateCar() {
         keys["arrowright"];
 
 
-    /* =================================================
-       ACCELERATION
-    ================================================= */
+    /* Acceleration */
 
     if (accelerating) {
 
@@ -1078,8 +1528,6 @@ function updateCar() {
 
     else {
 
-        /* Natural rolling resistance */
-
         if (speed > 0) {
 
             speed -= friction;
@@ -1095,9 +1543,7 @@ function updateCar() {
     }
 
 
-    /* =================================================
-       HANDBRAKE
-    ================================================= */
+    /* Handbrake */
 
     if (keys[" "]) {
 
@@ -1106,9 +1552,7 @@ function updateCar() {
     }
 
 
-    /* =================================================
-       SPEED LIMIT
-    ================================================= */
+    /* Clamp */
 
     speed =
         THREE.MathUtils.clamp(
@@ -1118,9 +1562,7 @@ function updateCar() {
         );
 
 
-    /* =================================================
-       STEERING INPUT
-    ================================================= */
+    /* Steering */
 
     let targetSteering = 0;
 
@@ -1139,8 +1581,6 @@ function updateCar() {
     }
 
 
-    /* Smooth steering */
-
     steering +=
         (
             targetSteering -
@@ -1149,9 +1589,7 @@ function updateCar() {
         steeringResponse;
 
 
-    /* =================================================
-       VISUAL FRONT-WHEEL STEERING
-    ================================================= */
+    /* Front wheels turn */
 
     const wheelAngle =
         steering *
@@ -1168,9 +1606,7 @@ function updateCar() {
     );
 
 
-    /* =================================================
-       CAR TURNING
-    ================================================= */
+    /* Car rotation */
 
     const speedFactor =
         Math.min(
@@ -1193,9 +1629,7 @@ function updateCar() {
         direction;
 
 
-    /* =================================================
-       CAR MOVEMENT
-    ================================================= */
+    /* Movement */
 
     const forward =
         new THREE.Vector3(
@@ -1216,9 +1650,7 @@ function updateCar() {
     );
 
 
-    /* =================================================
-       SUSPENSION
-    ================================================= */
+    /* Suspension */
 
     const suspension =
         Math.sin(
@@ -1236,15 +1668,20 @@ function updateCar() {
         suspension;
 
 
-    /* =================================================
-       WHEEL ROTATION
-    ================================================= */
+    /* Wheel rotation */
 
     wheels.forEach(
         wheel => {
 
-            wheel.rotation.x -=
+            wheel.tire.rotation.x -=
                 speed * 2.8;
+
+            wheel.rim.rotation.x -=
+                speed * 2.8;
+
+            wheel.group.position.y =
+                -0.28 +
+                suspension * 0.4;
 
         }
     );
@@ -1261,8 +1698,8 @@ function updateCamera() {
     const offset =
         new THREE.Vector3(
             0,
-            4.2,
-            8.5
+            4.4,
+            8.8
         );
 
 
@@ -1288,7 +1725,7 @@ function updateCamera() {
             .clone();
 
 
-    lookAt.y += 1;
+    lookAt.y += 0.8;
 
 
     camera.lookAt(
@@ -1299,7 +1736,7 @@ function updateCamera() {
 
 
 /* =====================================================
-   TRAFFIC UPDATE
+   TRAFFIC
 ===================================================== */
 
 function updateTraffic() {
