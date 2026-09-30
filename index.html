@@ -10,19 +10,13 @@
     box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
     margin: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #080b10;
+    background: #8fb4d9;
     font-family: Arial, Helvetica, sans-serif;
-}
-
-#game {
-    position: fixed;
-    inset: 0;
 }
 
 canvas {
@@ -33,51 +27,62 @@ canvas {
     position: fixed;
     inset: 0;
     z-index: 100;
+    background: #090b0e;
+    color: white;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    background: radial-gradient(circle, #202733 0%, #080a0d 72%);
-    color: white;
-    transition: opacity .8s ease;
+    justify-content: center;
+    transition: opacity .6s ease;
 }
 
 #loading h1 {
     margin: 0;
-    font-size: 48px;
-    font-weight: 300;
-    letter-spacing: 10px;
+    font-size: 42px;
+    letter-spacing: 8px;
+    font-weight: 700;
 }
 
 #loading p {
-    margin: 12px 0 0;
-    color: #87909e;
-    font-size: 12px;
-    letter-spacing: 3px;
+    margin-top: 12px;
+    color: #9da5ae;
+    letter-spacing: 2px;
 }
 
-#loadingBar {
-    width: 260px;
-    height: 2px;
-    background: #292e36;
+#loadBar {
+    width: 300px;
+    height: 4px;
+    background: #20242a;
     margin-top: 25px;
+    overflow: hidden;
 }
 
-#loadingFill {
+#loadProgress {
     width: 0%;
     height: 100%;
-    background: #e7edf8;
-    transition: width .2s ease;
+    background: #ffffff;
+    transition: width .3s ease;
+}
+
+#loadStatus {
+    margin-top: 14px;
+    color: #777f89;
+    font-size: 12px;
 }
 
 #hud {
     position: fixed;
-    left: 22px;
-    bottom: 20px;
-    z-index: 10;
-    color: white;
+    inset: 0;
     pointer-events: none;
-    text-shadow: 0 2px 8px black;
+    color: white;
+    z-index: 10;
+}
+
+#speedBox {
+    position: absolute;
+    left: 28px;
+    bottom: 25px;
+    text-shadow: 0 2px 5px #000;
 }
 
 #speed {
@@ -86,39 +91,50 @@ canvas {
 }
 
 #kmh {
-    font-size: 12px;
-    opacity: .7;
-    margin-top: -5px;
+    font-size: 14px;
+    color: #c8cdd2;
+    margin-left: 4px;
 }
 
-#worldInfo {
-    margin-top: 8px;
-    font-size: 12px;
-    opacity: .7;
+#location {
+    position: absolute;
+    top: 22px;
+    left: 25px;
+    font-size: 13px;
+    color: #e7eaed;
+    text-shadow: 0 2px 4px #000;
 }
 
 #controls {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 10;
-    color: rgba(255,255,255,.65);
+    position: absolute;
+    right: 25px;
+    bottom: 22px;
+    text-align: right;
+    color: #d5d9dd;
     font-size: 12px;
     line-height: 1.7;
-    text-align: right;
-    pointer-events: none;
-    text-shadow: 0 2px 7px black;
+    text-shadow: 0 2px 4px #000;
 }
 
-#nightIndicator {
-    position: fixed;
-    right: 20px;
-    top: 20px;
-    z-index: 10;
-    color: rgba(255,255,255,.65);
+#carStatus {
+    position: absolute;
+    top: 22px;
+    right: 25px;
     font-size: 11px;
-    letter-spacing: 2px;
-    pointer-events: none;
+    color: #aeb5bc;
+    text-shadow: 0 2px 4px #000;
+}
+
+#crosshair {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    margin-top: -2px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.45);
 }
 </style>
 
@@ -134,144 +150,110 @@ canvas {
 
 <body>
 
-<div id="game"></div>
-
 <div id="loading">
     <h1>HORIZON</h1>
-    <p>BUILDING THE WORLD</p>
-
-    <div id="loadingBar">
-        <div id="loadingFill"></div>
+    <p>OPEN WORLD</p>
+    <div id="loadBar">
+        <div id="loadProgress"></div>
     </div>
+    <div id="loadStatus">INITIALIZING WORLD...</div>
 </div>
 
 <div id="hud">
-    <div id="speed">0</div>
-    <div id="kmh">KM/H</div>
-    <div id="worldInfo">LOADING</div>
+    <div id="location">LOADING WORLD</div>
+
+    <div id="carStatus">
+        GOLDEN HOUR COASTAL SUPERCAR
+    </div>
+
+    <div id="speedBox">
+        <span id="speed">0</span>
+        <span id="kmh">KM/H</span>
+    </div>
+
+    <div id="controls">
+        W A S D / ARROWS — DRIVE<br>
+        SPACE — BRAKE<br>
+        N — DAY / NIGHT
+    </div>
+
+    <div id="crosshair"></div>
 </div>
-
-<div id="nightIndicator">DAY</div>
-
-<div id="controls">
-    W / S — DRIVE<br>
-    A / D — STEER<br>
-    SPACE — BRAKE<br>
-    N — DAY / NIGHT
-</div>
-
 
 <script type="module">
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 /* =========================================================
-   SCENE
+   BASIC SETUP
 ========================================================= */
 
 const scene = new THREE.Scene();
 
-scene.background =
-    new THREE.Color(0x91b7dc);
+scene.background = new THREE.Color(0x8fb4d9);
 
-scene.fog =
-    new THREE.Fog(
-        0x91b7dc,
-        500,
-        1900
-    );
+scene.fog = new THREE.Fog(
+    0x8fb4d9,
+    500,
+    1900
+);
 
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-const camera =
-    new THREE.PerspectiveCamera(
-        65,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        3500
-    );
+const camera = new THREE.PerspectiveCamera(
+    65,
+    innerWidth / innerHeight,
+    0.1,
+    3500
+);
 
 camera.position.set(
     0,
-    5,
-    12
+    8,
+    18
 );
 
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance"
+});
 
-/* =========================================================
-   RENDERER
-========================================================= */
-
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias: true,
-        powerPreference: "high-performance"
-    });
-
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
-
+renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        1.5
-    )
+    Math.min(window.devicePixelRatio, 1.8)
 );
 
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-renderer.shadowMap.type =
-    THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
 
-renderer.toneMapping =
-    THREE.ACESFilmicToneMapping;
-
-renderer.toneMappingExposure =
-    1.12;
-
-document
-    .getElementById("game")
-    .appendChild(renderer.domElement);
-
+document.body.appendChild(renderer.domElement);
 
 /* =========================================================
    LIGHTING
 ========================================================= */
 
-const hemiLight =
-    new THREE.HemisphereLight(
-        0xddeeff,
-        0x405040,
-        1.8
-    );
-
-scene.add(
-    hemiLight
+const hemi = new THREE.HemisphereLight(
+    0xbfdcff,
+    0x506040,
+    1.35
 );
 
+scene.add(hemi);
 
-const sun =
-    new THREE.DirectionalLight(
-        0xffffff,
-        3.2
-    );
+const sun = new THREE.DirectionalLight(
+    0xffffff,
+    2.4
+);
 
 sun.position.set(
-    350,
-    600,
+    400,
+    650,
     250
 );
 
@@ -280,838 +262,1179 @@ sun.castShadow = true;
 sun.shadow.mapSize.width = 2048;
 sun.shadow.mapSize.height = 2048;
 
-sun.shadow.camera.left = -600;
-sun.shadow.camera.right = 600;
-sun.shadow.camera.top = 600;
-sun.shadow.camera.bottom = -600;
+sun.shadow.camera.left = -500;
+sun.shadow.camera.right = 500;
+sun.shadow.camera.top = 500;
+sun.shadow.camera.bottom = -500;
 
 sun.shadow.camera.near = 1;
-sun.shadow.camera.far = 1800;
+sun.shadow.camera.far = 1600;
 
-scene.add(
-    sun
+scene.add(sun);
+
+const ambient = new THREE.AmbientLight(
+    0xffffff,
+    0.25
 );
 
-
-const ambientLight =
-    new THREE.AmbientLight(
-        0xffffff,
-        .22
-    );
-
-scene.add(
-    ambientLight
-);
-
+scene.add(ambient);
 
 /* =========================================================
-   LOADERS
-========================================================= */
-
-const gltfLoader =
-    new GLTFLoader();
-
-const dracoLoader =
-    new DRACOLoader();
-
-dracoLoader.setDecoderPath(
-    "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/"
-);
-
-gltfLoader.setDRACOLoader(
-    dracoLoader
-);
-
-gltfLoader.setMeshoptDecoder(
-    MeshoptDecoder
-);
-
-
-/* =========================================================
-   WORLD SETTINGS
+   WORLD CONSTANTS
 ========================================================= */
 
 const CHUNK_SIZE = 240;
 
 const LOAD_RADIUS = 2;
-
 const UNLOAD_RADIUS = 3;
 
 const WORLD_SEED = 72831;
 
-const CITY_RADIUS = 900;
+const ROAD_LIFT = 0.68;
+const ROAD_MARK_LIFT = 0.78;
 
-/*
-   This is the key road/grass separation.
-*/
+const ROAD_MAX_WIDTH = 28;
 
-const ROAD_LIFT = 0.72;
+const ROAD_OVERLAP = 14;
 
-const ROAD_MARK_LIFT = 0.045;
-
-const SIDEWALK_LIFT = 0.78;
-
-const CAR_GROUND_OFFSET = 0.06;
-
-const WATER_LEVEL = -7;
+const CITY_LIMIT = 960;
 
 const chunks = new Map();
 
 let worldReady = false;
 
-let lastChunkX = null;
-let lastChunkZ = null;
+let worldTime = 0.32;
 
+let lastChunkX = 999999;
+let lastChunkZ = 999999;
+
+/* =========================================================
+   LOADERS
+========================================================= */
+
+const loader = new GLTFLoader();
+
+const draco = new DRACOLoader();
+
+draco.setDecoderPath(
+    "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/"
+);
+
+loader.setDRACOLoader(draco);
+
+/* =========================================================
+   LOADING UI
+========================================================= */
+
+let loadingProgress = 0;
+
+function setLoading(text, progress) {
+
+    document.getElementById("loadStatus").textContent = text;
+
+    loadingProgress = Math.max(
+        loadingProgress,
+        progress
+    );
+
+    document.getElementById("loadProgress").style.width =
+        `${loadingProgress}%`;
+}
 
 /* =========================================================
    SEEDED RANDOM
 ========================================================= */
 
-function hash2D(
-    x,
-    z,
-    seed = WORLD_SEED
-) {
+function hash2D(x, z, seed = WORLD_SEED) {
 
     let h =
-        Math.imul(
-            Math.floor(x) + seed,
-            374761393
-        ) ^
-        Math.imul(
-            Math.floor(z) + seed * 3,
-            668265263
-        );
+        Math.sin(
+            x * 127.1 +
+            z * 311.7 +
+            seed * 74.7
+        ) * 43758.5453;
 
-    h =
-        (h ^ (h >>> 13)) *
-        1274126177;
-
-    h ^= h >>> 16;
-
-    return (
-        h >>> 0
-    ) / 4294967295;
+    return h - Math.floor(h);
 }
 
+function randomRange(x, z, min, max, offset = 0) {
 
-function randomRange(
-    x,
-    z,
-    min,
-    max,
-    salt = 0
-) {
-
-    return THREE.MathUtils.lerp(
-        min,
-        max,
+    return min +
         hash2D(
-            x + salt * 31.71,
-            z - salt * 17.23
-        )
-    );
+            x + offset * 17.3,
+            z - offset * 29.7
+        ) *
+        (max - min);
 }
 
+/* =========================================================
+   SMOOTH NOISE
+========================================================= */
 
-function smoothNoise(
-    x,
-    z
-) {
+function smooth(t) {
 
-    const x0 =
-        Math.floor(x);
+    return t * t * (3 - 2 * t);
+}
 
-    const z0 =
-        Math.floor(z);
+function noise2D(x, z, scale = 1) {
 
-    const x1 =
-        x0 + 1;
+    x /= scale;
+    z /= scale;
 
-    const z1 =
-        z0 + 1;
+    const x0 = Math.floor(x);
+    const z0 = Math.floor(z);
 
-    const sx =
-        x - x0;
+    const x1 = x0 + 1;
+    const z1 = z0 + 1;
 
-    const sz =
-        z - z0;
+    const sx = smooth(x - x0);
+    const sz = smooth(z - z0);
 
-    const u =
-        sx * sx *
-        (3 - 2 * sx);
+    const n00 = hash2D(x0, z0);
+    const n10 = hash2D(x1, z0);
+    const n01 = hash2D(x0, z1);
+    const n11 = hash2D(x1, z1);
 
-    const v =
-        sz * sz *
-        (3 - 2 * sz);
+    const nx0 = THREE.MathUtils.lerp(
+        n00,
+        n10,
+        sx
+    );
 
-    const n00 =
-        hash2D(x0, z0);
-
-    const n10 =
-        hash2D(x1, z0);
-
-    const n01 =
-        hash2D(x0, z1);
-
-    const n11 =
-        hash2D(x1, z1);
-
-    const a =
-        THREE.MathUtils.lerp(
-            n00,
-            n10,
-            u
-        );
-
-    const b =
-        THREE.MathUtils.lerp(
-            n01,
-            n11,
-            u
-        );
+    const nx1 = THREE.MathUtils.lerp(
+        n01,
+        n11,
+        sx
+    );
 
     return THREE.MathUtils.lerp(
-        a,
-        b,
-        v
+        nx0,
+        nx1,
+        sz
     );
 }
-
 
 /* =========================================================
    TERRAIN
 ========================================================= */
 
-function terrainHeight(
-    x,
-    z
-) {
-
-    const n1 =
-        smoothNoise(
-            x * .004,
-            z * .004
-        );
-
-    const n2 =
-        smoothNoise(
-            x * .012 + 100,
-            z * .012 + 100
-        );
-
-    const n3 =
-        smoothNoise(
-            x * .035 + 500,
-            z * .035 + 500
-        );
-
-    let height =
-        -7 +
-        n1 * 22 +
-        n2 * 7 +
-        n3 * 1.8;
-
+function terrainHeight(x, z) {
 
     const distance =
-        Math.sqrt(
-            x * x +
-            z * z
-        );
+        Math.sqrt(x * x + z * z);
 
+    const broad =
+        noise2D(x, z, 420);
+
+    const medium =
+        noise2D(x + 100, z - 200, 160);
+
+    const small =
+        noise2D(x - 500, z + 300, 55);
+
+    let height =
+        (broad - 0.5) * 28 +
+        (medium - 0.5) * 9 +
+        (small - 0.5) * 2.5;
 
     /*
-       Central city is deliberately flatter.
+        Keep the central city relatively flat.
     */
 
-    const flatten =
+    const cityBlend =
         1 -
         THREE.MathUtils.smoothstep(
-            CITY_RADIUS * .42,
-            CITY_RADIUS,
+            350,
+            CITY_LIMIT,
             distance
         );
 
+    height *= 1 - cityBlend * 0.72;
 
-    height =
-        THREE.MathUtils.lerp(
-            height,
-            -3.2 +
-            n2 * 1.1,
-            flatten
+    /*
+        Coastline.
+    */
+
+    const coastNoise =
+        noise2D(
+            x + 800,
+            z - 500,
+            600
         );
 
+    const coastZone =
+        coastNoise < 0.28 &&
+        distance > 700;
+
+    if (coastZone) {
+
+        height =
+            Math.max(
+                height,
+                -2.5
+            );
+    }
 
     return height;
 }
-
 
 /* =========================================================
    BIOMES
 ========================================================= */
 
-function getBiome(
-    x,
-    z
-) {
+function getBiome(x, z) {
 
-    const distance =
-        Math.sqrt(
-            x * x +
-            z * z
-        );
-
-    if (
-        distance <
-        CITY_RADIUS
-    ) {
-
-        return "city";
-    }
-
+    const d =
+        Math.sqrt(x * x + z * z);
 
     const n =
-        smoothNoise(
-            x * .0018,
-            z * .0018
-        );
+        noise2D(x + 1000, z - 400, 520);
 
+    const n2 =
+        noise2D(x - 700, z + 900, 250);
 
-    if (
-        n > .74
-    ) {
-
-        return "mountain";
-    }
-
+    if (d < 350)
+        return "downtown";
 
     if (
-        n < .27
-    ) {
+        d < 720 &&
+        n2 > 0.58
+    )
+        return "suburbs";
 
+    if (
+        d < 900 &&
+        n2 < 0.24
+    )
+        return "industrial";
+
+    if (
+        d > 700 &&
+        n < 0.23
+    )
         return "coast";
-    }
 
+    if (
+        n > 0.74
+    )
+        return "mountain";
+
+    if (
+        n2 > 0.72
+    )
+        return "forest";
 
     return "countryside";
 }
 
+/* =========================================================
+   ROAD SYSTEM
+========================================================= */
+
+function roadCandidatesAlongZ(z) {
+
+    const result = [];
+
+    const major =
+        Math.round(z / 240) * 240;
+
+    if (
+        Math.abs(major) <= CITY_LIMIT
+    ) {
+
+        result.push({
+            center: major,
+            width: 26,
+            type: "major"
+        });
+    }
+
+    const local =
+        Math.round(z / 80) * 80;
+
+    if (
+        Math.abs(local) <= CITY_LIMIT
+    ) {
+
+        result.push({
+            center: local,
+            width: 13,
+            type: "local"
+        });
+    }
+
+    const highway =
+        Math.round(z / 480) * 480;
+
+    result.push({
+        center: highway,
+        width: 20,
+        type: "highway"
+    });
+
+    return result;
+}
+
+function roadCandidatesAlongX(x) {
+
+    const result = [];
+
+    const major =
+        Math.round(x / 240) * 240;
+
+    if (
+        Math.abs(major) <= CITY_LIMIT
+    ) {
+
+        result.push({
+            center: major,
+            width: 26,
+            type: "major"
+        });
+    }
+
+    const local =
+        Math.round(x / 80) * 80;
+
+    if (
+        Math.abs(local) <= CITY_LIMIT
+    ) {
+
+        result.push({
+            center: local,
+            width: 13,
+            type: "local"
+        });
+    }
+
+    const highway =
+        Math.round(x / 480) * 480;
+
+    result.push({
+        center: highway,
+        width: 20,
+        type: "highway"
+    });
+
+    return result;
+}
+
+function getRoadAt(x, z) {
+
+    let best = null;
+
+    const horizontal =
+        roadCandidatesAlongZ(z);
+
+    for (const r of horizontal) {
+
+        const distance =
+            Math.abs(z - r.center);
+
+        if (
+            distance <= r.width / 2
+        ) {
+
+            if (
+                !best ||
+                r.width > best.width
+            ) {
+
+                best = {
+                    axis: "horizontal",
+                    center: r.center,
+                    width: r.width,
+                    type: r.type
+                };
+            }
+        }
+    }
+
+    const vertical =
+        roadCandidatesAlongX(x);
+
+    for (const r of vertical) {
+
+        const distance =
+            Math.abs(x - r.center);
+
+        if (
+            distance <= r.width / 2
+        ) {
+
+            if (
+                !best ||
+                r.width > best.width
+            ) {
+
+                best = {
+                    axis: "vertical",
+                    center: r.center,
+                    width: r.width,
+                    type: r.type
+                };
+            }
+        }
+    }
+
+    return best;
+}
+
+function roadClearance(x, z) {
+
+    let best = Infinity;
+
+    for (
+        const r of roadCandidatesAlongZ(z)
+    ) {
+
+        best = Math.min(
+            best,
+            Math.abs(z - r.center) -
+            r.width / 2
+        );
+    }
+
+    for (
+        const r of roadCandidatesAlongX(x)
+    ) {
+
+        best = Math.min(
+            best,
+            Math.abs(x - r.center) -
+            r.width / 2
+        );
+    }
+
+    return best;
+}
+
+function isRoadClear(x, z, radius = 3) {
+
+    return roadClearance(x, z) > radius;
+}
 
 /* =========================================================
-   MATERIALS
+   WORLD ROAD STRIPS
+========================================================= */
+
+function createWorldStrip(
+    centerX,
+    centerZ,
+    axis,
+    width,
+    length,
+    lift,
+    material
+) {
+
+    const across = 2;
+    const along = 18;
+
+    const geometry =
+        new THREE.PlaneGeometry(
+            width,
+            length,
+            across,
+            along
+        );
+
+    geometry.rotateX(-Math.PI / 2);
+
+    const pos =
+        geometry.attributes.position;
+
+    for (
+        let i = 0;
+        i < pos.count;
+        i++
+    ) {
+
+        let lx = pos.getX(i);
+        let lz = pos.getZ(i);
+
+        let wx;
+        let wz;
+
+        if (
+            axis === "horizontal"
+        ) {
+
+            wx = centerX + lz;
+            wz = centerZ + lx;
+
+        } else {
+
+            wx = centerX + lx;
+            wz = centerZ + lz;
+        }
+
+        pos.setXYZ(
+            i,
+            wx,
+            terrainHeight(wx, wz) + lift,
+            wz
+        );
+    }
+
+    pos.needsUpdate = true;
+
+    geometry.computeVertexNormals();
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    mesh.receiveShadow = true;
+
+    mesh.userData.worldGenerated = true;
+
+    return mesh;
+}
+
+/* =========================================================
+   ROAD MATERIALS
 ========================================================= */
 
 const roadMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x292c30,
-        roughness: .95
+        color: 0x24272b,
+        roughness: 0.88,
+        metalness: 0.05
     });
 
-
-const yellowRoadMaterial =
+const roadShoulderMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0xd6b93e,
-        roughness: .8
+        color: 0x393c3e,
+        roughness: 1
     });
 
-
-const whiteRoadMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0xe8e9e5,
-        roughness: .8
+const lineMaterial =
+    new THREE.MeshBasicMaterial({
+        color: 0xf1df85
     });
 
+const whiteLineMaterial =
+    new THREE.MeshBasicMaterial({
+        color: 0xffffff
+    });
 
 const sidewalkMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x85898a,
-        roughness: .95
-    });
-
-
-const curbMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x9b9d9c,
-        roughness: .9
-    });
-
-
-const waterMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x2e748c,
-        roughness: .16,
-        metalness: .08,
-        transparent: true,
-        opacity: .72
-    });
-
-
-const treeTrunkMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x513b28,
+        color: 0x8d8f8f,
         roughness: 1
     });
-
-
-const treeLeafMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x355b35,
-        roughness: 1
-    });
-
-
-const bushMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x466d3f,
-        roughness: 1
-    });
-
-
-const rockMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x6b6b63,
-        roughness: 1
-    });
-
-
-const lampMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x202327,
-        roughness: .75,
-        metalness: .5
-    });
-
-
-const lampGlowMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0xffdca3,
-        emissive: 0xffb55b,
-        emissiveIntensity: 2.5
-    });
-
-
-const guardrailMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x767b7e,
-        roughness: .45,
-        metalness: .65
-    });
-
 
 /* =========================================================
-   SHARED GEOMETRIES
+   ROAD CREATION
 ========================================================= */
 
-const treeTrunkGeometry =
+function addRoadSegment(
+    group,
+    centerX,
+    centerZ,
+    axis,
+    width,
+    length,
+    type
+) {
+
+    /*
+        Slightly wider foundation prevents terrain/grass
+        from showing through the road edges.
+    */
+
+    const shoulder =
+        createWorldStrip(
+            centerX,
+            centerZ,
+            axis,
+            width + 2.5,
+            length + 3,
+            ROAD_LIFT - 0.06,
+            roadShoulderMaterial
+        );
+
+    group.add(shoulder);
+
+    const road =
+        createWorldStrip(
+            centerX,
+            centerZ,
+            axis,
+            width,
+            length,
+            ROAD_LIFT,
+            roadMaterial
+        );
+
+    group.add(road);
+
+    /*
+        Center marking.
+    */
+
+    const lineWidth =
+        type === "highway"
+            ? 0.25
+            : 0.18;
+
+    const centerLine =
+        createWorldStrip(
+            centerX,
+            centerZ,
+            axis,
+            lineWidth,
+            length,
+            ROAD_MARK_LIFT,
+            lineMaterial
+        );
+
+    group.add(centerLine);
+
+    /*
+        Edge markings.
+    */
+
+    if (type !== "local") {
+
+        const edge1 =
+            createWorldStrip(
+                centerX,
+                centerZ,
+                axis,
+                0.14,
+                length,
+                ROAD_MARK_LIFT + 0.015,
+                whiteLineMaterial
+            );
+
+        const edge2 =
+            createWorldStrip(
+                centerX,
+                centerZ,
+                axis,
+                0.14,
+                length,
+                ROAD_MARK_LIFT + 0.015,
+                whiteLineMaterial
+            );
+
+        /*
+            Move edges sideways from the road center.
+        */
+
+        if (axis === "horizontal") {
+
+            edge1.position.z =
+                -width / 2 + 1;
+
+            edge2.position.z =
+                width / 2 - 1;
+
+        } else {
+
+            edge1.position.x =
+                -width / 2 + 1;
+
+            edge2.position.x =
+                width / 2 - 1;
+        }
+
+        group.add(edge1);
+        group.add(edge2);
+    }
+}
+
+/* =========================================================
+   ROAD GENERATION
+========================================================= */
+
+function generateRoads(group, cx, cz) {
+
+    const minX =
+        cx * CHUNK_SIZE;
+
+    const maxX =
+        minX + CHUNK_SIZE;
+
+    const minZ =
+        cz * CHUNK_SIZE;
+
+    const maxZ =
+        minZ + CHUNK_SIZE;
+
+    /*
+        Horizontal roads.
+
+        IMPORTANT:
+        We extend the search beyond the chunk edges so
+        roads continue correctly between chunks.
+    */
+
+    const zStart =
+        Math.floor(
+            (minZ - ROAD_MAX_WIDTH) / 80
+        ) * 80;
+
+    const zEnd =
+        maxZ + ROAD_MAX_WIDTH;
+
+    for (
+        let z = zStart;
+        z <= zEnd;
+        z += 80
+    ) {
+
+        const candidates =
+            roadCandidatesAlongZ(z);
+
+        for (const r of candidates) {
+
+            if (
+                Math.abs(z - r.center) >
+                ROAD_MAX_WIDTH
+            )
+                continue;
+
+            /*
+                Local road candidate only exists when its
+                center is this candidate.
+            */
+
+            if (
+                Math.abs(
+                    r.center - z
+                ) > 0.1
+            )
+                continue;
+
+            addRoadSegment(
+                group,
+                (minX + maxX) / 2,
+                r.center,
+                "horizontal",
+                r.width,
+                CHUNK_SIZE + ROAD_OVERLAP,
+                r.type
+            );
+        }
+    }
+
+    /*
+        Vertical roads.
+    */
+
+    const xStart =
+        Math.floor(
+            (minX - ROAD_MAX_WIDTH) / 80
+        ) * 80;
+
+    const xEnd =
+        maxX + ROAD_MAX_WIDTH;
+
+    for (
+        let x = xStart;
+        x <= xEnd;
+        x += 80
+    ) {
+
+        const candidates =
+            roadCandidatesAlongX(x);
+
+        for (const r of candidates) {
+
+            if (
+                Math.abs(x - r.center) >
+                ROAD_MAX_WIDTH
+            )
+                continue;
+
+            if (
+                Math.abs(
+                    r.center - x
+                ) > 0.1
+            )
+                continue;
+
+            addRoadSegment(
+                group,
+                r.center,
+                (minZ + maxZ) / 2,
+                "vertical",
+                r.width,
+                CHUNK_SIZE + ROAD_OVERLAP,
+                r.type
+            );
+        }
+    }
+}
+
+/* =========================================================
+   SHARED NATURE GEOMETRY
+========================================================= */
+
+const trunkGeometry =
     new THREE.CylinderGeometry(
-        .13,
-        .2,
+        0.18,
+        0.27,
         2.4,
         7
     );
 
-
-const treeLeafGeometry =
-    new THREE.IcosahedronGeometry(
+const leafGeometry =
+    new THREE.ConeGeometry(
         1.25,
-        1
+        3.6,
+        8
     );
-
 
 const bushGeometry =
-    new THREE.IcosahedronGeometry(
-        1,
-        1
+    new THREE.SphereGeometry(
+        0.8,
+        8,
+        6
     );
-
 
 const rockGeometry =
     new THREE.DodecahedronGeometry(
-        1,
+        0.9,
         0
     );
 
-
-const lampPoleGeometry =
-    new THREE.CylinderGeometry(
-        .07,
-        .11,
-        5.5,
-        7
-    );
-
-
-const lampArmGeometry =
-    new THREE.BoxGeometry(
-        .75,
-        .09,
-        .09
-    );
-
-
-const lampGlowGeometry =
-    new THREE.SphereGeometry(
-        .16,
-        8,
-        8
-    );
-
-
-const guardrailGeometry =
-    new THREE.BoxGeometry(
-        1,
-        .18,
-        .16
-    );
-
-
-const waterGeometry =
-    new THREE.PlaneGeometry(
-        1,
-        1
-    );
-
-
-const mountainGeometry =
-    new THREE.ConeGeometry(
-        1,
-        1,
-        8
-    );
-
-
-/* =========================================================
-   STARS
-========================================================= */
-
-const starCount = 1200;
-
-const starPositions =
-    new Float32Array(
-        starCount * 3
-    );
-
-for (
-    let i = 0;
-    i < starCount;
-    i++
-) {
-
-    const radius = 1700;
-
-    const a =
-        hash2D(
-            i,
-            1
-        ) *
-        Math.PI * 2;
-
-    const b =
-        hash2D(
-            i,
-            2
-        ) *
-        Math.PI;
-
-    starPositions[i * 3] =
-        Math.sin(b) *
-        Math.cos(a) *
-        radius;
-
-    starPositions[i * 3 + 1] =
-        Math.cos(b) *
-        radius;
-
-    starPositions[i * 3 + 2] =
-        Math.sin(b) *
-        Math.sin(a) *
-        radius;
-}
-
-
-const starGeometry =
-    new THREE.BufferGeometry();
-
-starGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(
-        starPositions,
-        3
-    )
-);
-
-
-const starMaterial =
-    new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 2,
-        sizeAttenuation: false,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false
+const trunkMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x5c4029,
+        roughness: 1
     });
 
+const leafMaterials = [
 
-const stars =
-    new THREE.Points(
-        starGeometry,
-        starMaterial
-    );
+    new THREE.MeshStandardMaterial({
+        color: 0x274c2d,
+        roughness: 1
+    }),
 
-scene.add(
-    stars
-);
+    new THREE.MeshStandardMaterial({
+        color: 0x37623a,
+        roughness: 1
+    }),
 
+    new THREE.MeshStandardMaterial({
+        color: 0x496e3b,
+        roughness: 1
+    })
+];
+
+const bushMaterials = [
+
+    new THREE.MeshStandardMaterial({
+        color: 0x355532,
+        roughness: 1
+    }),
+
+    new THREE.MeshStandardMaterial({
+        color: 0x4b6637,
+        roughness: 1
+    })
+];
+
+const rockMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x66635e,
+        roughness: 1
+    });
 
 /* =========================================================
-   ROAD DEFINITIONS
+   TREES
 ========================================================= */
 
-function getRoadCandidates(
+function createTree(
     x,
-    z
+    y,
+    z,
+    scale = 1,
+    variant = 0
 ) {
 
-    const roads = [];
+    const tree =
+        new THREE.Group();
 
-
-    const majorZ =
-        Math.round(
-            z / 240
-        ) * 240;
-
-    if (
-        Math.abs(majorZ) <=
-        CITY_RADIUS
-    ) {
-
-        roads.push({
-            axis: "x",
-            center: majorZ,
-            width: 26,
-            type: "major",
-            priority: 3
-        });
-    }
-
-
-    const cityZ =
-        Math.round(
-            z / 80
-        ) * 80;
-
-    if (
-        Math.abs(cityZ) <=
-        CITY_RADIUS
-    ) {
-
-        roads.push({
-            axis: "x",
-            center: cityZ,
-            width: 13,
-            type: "city",
-            priority: 2
-        });
-    }
-
-
-    const highwayZ =
-        Math.round(
-            z / 480
-        ) * 480;
-
-    roads.push({
-        axis: "x",
-        center: highwayZ,
-        width: 18,
-        type: "highway",
-        priority: 1
-    });
-
-
-    const majorX =
-        Math.round(
-            x / 240
-        ) * 240;
-
-    if (
-        Math.abs(majorX) <=
-        CITY_RADIUS
-    ) {
-
-        roads.push({
-            axis: "z",
-            center: majorX,
-            width: 26,
-            type: "major",
-            priority: 3
-        });
-    }
-
-
-    const cityX =
-        Math.round(
-            x / 80
-        ) * 80;
-
-    if (
-        Math.abs(cityX) <=
-        CITY_RADIUS
-    ) {
-
-        roads.push({
-            axis: "z",
-            center: cityX,
-            width: 13,
-            type: "city",
-            priority: 2
-        });
-    }
-
-
-    const highwayX =
-        Math.round(
-            x / 480
-        ) * 480;
-
-    roads.push({
-        axis: "z",
-        center: highwayX,
-        width: 18,
-        type: "highway",
-        priority: 1
-    });
-
-
-    return roads;
-}
-
-
-/* =========================================================
-   ROAD LOOKUP
-========================================================= */
-
-function getRoadAt(
-    x,
-    z
-) {
-
-    const candidates =
-        getRoadCandidates(
-            x,
-            z
+    const trunk =
+        new THREE.Mesh(
+            trunkGeometry,
+            trunkMaterial
         );
 
+    trunk.position.y = 1.2;
 
-    const valid =
-        candidates.filter(
-            road => {
+    trunk.scale.setScalar(scale);
 
-                if (
-                    road.axis === "x"
-                ) {
+    trunk.castShadow = true;
 
-                    return (
-                        Math.abs(
-                            z -
-                            road.center
-                        ) <=
-                        road.width / 2
-                    );
-                }
+    trunk.userData.sharedGeometry = true;
 
+    tree.add(trunk);
 
-                return (
-                    Math.abs(
-                        x -
-                        road.center
-                    ) <=
-                    road.width / 2
-                );
+    const leaves =
+        new THREE.Mesh(
+            leafGeometry,
+            leafMaterials[
+                variant %
+                leafMaterials.length
+            ]
+        );
+
+    leaves.position.y =
+        3.0 * scale;
+
+    leaves.scale.setScalar(scale);
+
+    leaves.castShadow = true;
+
+    leaves.userData.sharedGeometry = true;
+
+    tree.add(leaves);
+
+    tree.position.set(
+        x,
+        y,
+        z
+    );
+
+    tree.rotation.y =
+        randomRange(
+            Math.floor(x),
+            Math.floor(z),
+            0,
+            Math.PI * 2,
+            4
+        );
+
+    return tree;
+}
+
+/* =========================================================
+   BUILDING ASSETS
+========================================================= */
+
+const buildingTemplates = [];
+
+const BUILDING_PATHS = [
+
+    "./assets/buildings/large-building.glb",
+    "./assets/buildings/store.glb",
+    "./assets/buildings/apartment.glb",
+    "./assets/buildings/large-building-2.glb",
+    "./assets/buildings/bank.glb"
+];
+
+async function loadBuilding(path) {
+
+    try {
+
+        const gltf =
+            await loader.loadAsync(path);
+
+        const root =
+            gltf.scene;
+
+        root.traverse(obj => {
+
+            if (obj.isMesh) {
+
+                obj.castShadow = true;
+                obj.receiveShadow = true;
+
+                obj.userData.sharedGeometry = true;
             }
+        });
+
+        /*
+            Normalize building to sit on ground.
+        */
+
+        const box =
+            new THREE.Box3()
+                .setFromObject(root);
+
+        const size =
+            new THREE.Vector3();
+
+        box.getSize(size);
+
+        const center =
+            new THREE.Vector3();
+
+        box.getCenter(center);
+
+        root.position.x -= center.x;
+        root.position.z -= center.z;
+        root.position.y -= box.min.y;
+
+        const maxDimension =
+            Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
+
+        if (maxDimension > 40) {
+
+            root.scale.setScalar(
+                35 / maxDimension
+            );
+        }
+
+        root.userData.sharedBuilding = true;
+
+        return root;
+
+    } catch (error) {
+
+        console.warn(
+            "Building failed:",
+            path,
+            error
         );
-
-
-    if (
-        valid.length === 0
-    ) {
 
         return null;
     }
-
-
-    valid.sort(
-        (a, b) =>
-            b.priority -
-            a.priority
-    );
-
-
-    return valid[0];
 }
 
+async function loadBuildings() {
 
-function roadClearance(
-    x,
-    z
-) {
-
-    const candidates =
-        getRoadCandidates(
-            x,
-            z
-        );
-
-    let clearance =
-        Infinity;
-
+    setLoading(
+        "LOADING BUILDINGS...",
+        10
+    );
 
     for (
-        const road of candidates
+        let i = 0;
+        i < BUILDING_PATHS.length;
+        i++
     ) {
 
-        const distance =
-            road.axis === "x"
-                ? Math.abs(
-                    z -
-                    road.center
-                )
-                : Math.abs(
-                    x -
-                    road.center
-                );
-
-
-        clearance =
-            Math.min(
-                clearance,
-                distance -
-                road.width / 2
+        const model =
+            await loadBuilding(
+                BUILDING_PATHS[i]
             );
+
+        if (model) {
+
+            buildingTemplates.push(
+                model
+            );
+        }
+
+        setLoading(
+            "LOADING BUILDINGS...",
+            10 + i * 8
+        );
     }
-
-
-    return clearance;
 }
-
-
-function isClearOfRoad(
-    x,
-    z,
-    radius = 0
-) {
-
-    return (
-        roadClearance(
-            x,
-            z
-        ) > radius
-    );
-}
-
 
 /* =========================================================
-   BUILDING ROAD CHECK
+   FALLBACK BUILDING
+========================================================= */
+
+function createFallbackBuilding(
+    type = 0
+) {
+
+    const group =
+        new THREE.Group();
+
+    const colors = [
+        0xb8b5ad,
+        0x8e969e,
+        0xc5a88d,
+        0x737c83,
+        0x9c9a92
+    ];
+
+    const width =
+        type === 0 ? 12 :
+        type === 1 ? 18 :
+        type === 2 ? 9 :
+        15;
+
+    const depth =
+        type === 0 ? 12 :
+        type === 1 ? 16 :
+        type === 2 ? 10 :
+        14;
+
+    const height =
+        type === 0 ? 12 :
+        type === 1 ? 22 :
+        type === 2 ? 8 :
+        16;
+
+    const geometry =
+        new THREE.BoxGeometry(
+            width,
+            height,
+            depth
+        );
+
+    const material =
+        new THREE.MeshStandardMaterial({
+            color:
+                colors[
+                    type %
+                    colors.length
+                ],
+            roughness: 0.85
+        });
+
+    const body =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    body.position.y =
+        height / 2;
+
+    body.castShadow = true;
+    body.receiveShadow = true;
+
+    body.userData.sharedGeometry = false;
+
+    group.add(body);
+
+    /*
+        Roof.
+    */
+
+    if (type === 2) {
+
+        const roof =
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    width + 0.5,
+                    0.6,
+                    depth + 0.5
+                ),
+                material
+            );
+
+        roof.position.y =
+            height + 0.3;
+
+        roof.castShadow = true;
+
+        group.add(roof);
+    }
+
+    return group;
+}
+
+/* =========================================================
+   BUILDING ROAD COLLISION
 ========================================================= */
 
 function buildingTouchesRoad(
@@ -1132,2074 +1455,87 @@ function buildingTouchesRoad(
             Math.sin(rotation)
         );
 
-
     const projectedX =
         halfX * cos +
         halfZ * sin;
-
 
     const projectedZ =
         halfX * sin +
         halfZ * cos;
 
-
-    const roads =
-        getRoadCandidates(
-            x,
-            z
-        );
-
+    const extra = 4;
 
     for (
-        const road of roads
+        const r of roadCandidatesAlongZ(z)
     ) {
 
         if (
-            road.axis === "x"
+            Math.abs(
+                z - r.center
+            ) <
+            r.width / 2 +
+            projectedZ +
+            extra
         ) {
 
-            if (
-                Math.abs(
-                    z -
-                    road.center
-                ) <
-                road.width / 2 +
-                projectedZ +
-                6
-            ) {
-
-                return true;
-            }
-
-        } else {
-
-            if (
-                Math.abs(
-                    x -
-                    road.center
-                ) <
-                road.width / 2 +
-                projectedX +
-                6
-            ) {
-
-                return true;
-            }
+            return true;
         }
     }
 
+    for (
+        const r of roadCandidatesAlongX(x)
+    ) {
+
+        if (
+            Math.abs(
+                x - r.center
+            ) <
+            r.width / 2 +
+            projectedX +
+            extra
+        ) {
+
+            return true;
+        }
+    }
 
     return false;
 }
-
-
-/* =========================================================
-   SURFACE HEIGHT
-========================================================= */
-
-function getSurfaceHeight(
-    x,
-    z
-) {
-
-    const ground =
-        terrainHeight(
-            x,
-            z
-        );
-
-
-    const road =
-        getRoadAt(
-            x,
-            z
-        );
-
-
-    if (
-        road
-    ) {
-
-        return (
-            ground +
-            ROAD_LIFT
-        );
-    }
-
-
-    return ground;
-}
-
-
-/* =========================================================
-   WORLD STRIP
-========================================================= */
-
-function createWorldStrip(
-    centerX,
-    centerZ,
-    axis,
-    length,
-    width,
-    lift,
-    material,
-    lengthSegments = 16,
-    widthSegments = 2
-) {
-
-    const geometry =
-        axis === "x"
-            ? new THREE.PlaneGeometry(
-                length,
-                width,
-                lengthSegments,
-                widthSegments
-            )
-            : new THREE.PlaneGeometry(
-                width,
-                length,
-                widthSegments,
-                lengthSegments
-            );
-
-
-    geometry.rotateX(
-        -Math.PI / 2
-    );
-
-
-    const position =
-        geometry.attributes.position;
-
-
-    for (
-        let i = 0;
-        i < position.count;
-        i++
-    ) {
-
-        const localX =
-            position.getX(i);
-
-        const localZ =
-            position.getZ(i);
-
-
-        const worldX =
-            centerX +
-            localX;
-
-        const worldZ =
-            centerZ +
-            localZ;
-
-
-        position.setX(
-            i,
-            worldX
-        );
-
-        position.setZ(
-            i,
-            worldZ
-        );
-
-        position.setY(
-            i,
-            terrainHeight(
-                worldX,
-                worldZ
-            ) +
-            lift
-        );
-    }
-
-
-    position.needsUpdate =
-        true;
-
-    geometry.computeVertexNormals();
-
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-    mesh.receiveShadow =
-        true;
-
-
-    return mesh;
-}
-
-
-/* =========================================================
-   TERRAIN
-========================================================= */
-
-function createTerrain(
-    group,
-    cx,
-    cz
-) {
-
-    const centerX =
-        cx * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-    const centerZ =
-        cz * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-
-    const segments = 32;
-
-
-    const geometry =
-        new THREE.PlaneGeometry(
-            CHUNK_SIZE,
-            CHUNK_SIZE,
-            segments,
-            segments
-        );
-
-
-    geometry.rotateX(
-        -Math.PI / 2
-    );
-
-
-    const position =
-        geometry.attributes.position;
-
-    const colors = [];
-
-
-    for (
-        let i = 0;
-        i < position.count;
-        i++
-    ) {
-
-        const worldX =
-            centerX +
-            position.getX(i);
-
-        const worldZ =
-            centerZ +
-            position.getZ(i);
-
-
-        const height =
-            terrainHeight(
-                worldX,
-                worldZ
-            );
-
-
-        position.setY(
-            i,
-            height
-        );
-
-
-        const biome =
-            getBiome(
-                worldX,
-                worldZ
-            );
-
-
-        let color;
-
-
-        if (
-            biome === "city"
-        ) {
-
-            color =
-                new THREE.Color(
-                    0x66735d
-                );
-
-        } else if (
-            biome === "coast"
-        ) {
-
-            color =
-                new THREE.Color(
-                    0xb3a27b
-                );
-
-        } else if (
-            biome === "mountain"
-        ) {
-
-            color =
-                new THREE.Color(
-                    0x697068
-                );
-
-        } else {
-
-            color =
-                new THREE.Color(
-                    0x557b4b
-                );
-        }
-
-
-        const variation =
-            .92 +
-            smoothNoise(
-                worldX * .03,
-                worldZ * .03
-            ) * .12;
-
-
-        color.multiplyScalar(
-            variation
-        );
-
-
-        colors.push(
-            color.r,
-            color.g,
-            color.b
-        );
-    }
-
-
-    geometry.setAttribute(
-        "color",
-        new THREE.Float32BufferAttribute(
-            colors,
-            3
-        )
-    );
-
-
-    geometry.computeVertexNormals();
-
-
-    const material =
-        new THREE.MeshStandardMaterial({
-            vertexColors: true,
-            roughness: 1
-        });
-
-
-    const terrain =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-
-    terrain.receiveShadow =
-        true;
-
-
-    group.add(
-        terrain
-    );
-}
-
-
-/* =========================================================
-   ROAD
-========================================================= */
-
-function createRoadSurface(
-    group,
-    x,
-    z,
-    axis,
-    width
-) {
-
-    const road =
-        createWorldStrip(
-            x,
-            z,
-            axis,
-            CHUNK_SIZE + 18,
-            width,
-            ROAD_LIFT,
-            roadMaterial,
-            24,
-            6
-        );
-
-
-    group.add(
-        road
-    );
-}
-
-
-function addRoadLine(
-    group,
-    x,
-    z,
-    axis,
-    offset,
-    length,
-    width,
-    material
-) {
-
-    const lineX =
-        axis === "x"
-            ? x
-            : x + offset;
-
-    const lineZ =
-        axis === "x"
-            ? z + offset
-            : z;
-
-
-    const line =
-        createWorldStrip(
-            lineX,
-            lineZ,
-            axis,
-            length,
-            width,
-            ROAD_LIFT +
-            ROAD_MARK_LIFT,
-            material,
-            10,
-            1
-        );
-
-
-    group.add(
-        line
-    );
-}
-
-
-function addDashedLine(
-    group,
-    x,
-    z,
-    axis,
-    material
-) {
-
-    const dashLength = 13;
-    const gap = 13;
-
-
-    for (
-        let p = -115;
-        p < 115;
-        p += dashLength + gap
-    ) {
-
-        const dashX =
-            axis === "x"
-                ? x + p
-                : x;
-
-        const dashZ =
-            axis === "x"
-                ? z
-                : z + p;
-
-
-        const dash =
-            createWorldStrip(
-                dashX,
-                dashZ,
-                axis,
-                dashLength,
-                .28,
-                ROAD_LIFT +
-                ROAD_MARK_LIFT,
-                material,
-                2,
-                1
-            );
-
-
-        group.add(
-            dash
-        );
-    }
-}
-
-
-/* =========================================================
-   SIDEWALK
-========================================================= */
-
-function createSidewalks(
-    group,
-    x,
-    z,
-    axis,
-    roadWidth
-) {
-
-    if (
-        roadWidth > 18
-    ) {
-
-        return;
-    }
-
-
-    const offset =
-        roadWidth / 2 + 4;
-
-
-    for (
-        const side of [-1, 1]
-    ) {
-
-        const sideOffset =
-            offset * side;
-
-
-        const sidewalkX =
-            axis === "x"
-                ? x
-                : x + sideOffset;
-
-        const sidewalkZ =
-            axis === "x"
-                ? z + sideOffset
-                : z;
-
-
-        const sidewalk =
-            createWorldStrip(
-                sidewalkX,
-                sidewalkZ,
-                axis,
-                CHUNK_SIZE + 18,
-                5.5,
-                SIDEWALK_LIFT,
-                sidewalkMaterial,
-                16,
-                2
-            );
-
-
-        group.add(
-            sidewalk
-        );
-    }
-}
-
-
-/* =========================================================
-   GUARDRAILS
-========================================================= */
-
-function createGuardrails(
-    group,
-    x,
-    z,
-    axis,
-    roadWidth
-) {
-
-    const offset =
-        roadWidth / 2 + 2.2;
-
-
-    for (
-        const side of [-1, 1]
-    ) {
-
-        const mesh =
-            new THREE.Mesh(
-                guardrailGeometry,
-                guardrailMaterial
-            );
-
-
-        mesh.userData.sharedGeometry =
-            true;
-
-
-        if (
-            axis === "x"
-        ) {
-
-            const railZ =
-                z +
-                side * offset;
-
-
-            mesh.scale.set(
-                CHUNK_SIZE + 18,
-                1,
-                1
-            );
-
-
-            mesh.position.set(
-                x,
-                terrainHeight(
-                    x,
-                    railZ
-                ) + 1.15,
-                railZ
-            );
-
-        } else {
-
-            const railX =
-                x +
-                side * offset;
-
-
-            mesh.scale.set(
-                1,
-                1,
-                CHUNK_SIZE + 18
-            );
-
-
-            mesh.position.set(
-                railX,
-                terrainHeight(
-                    railX,
-                    z
-                ) + 1.15,
-                z
-            );
-        }
-
-
-        mesh.castShadow =
-            true;
-
-
-        group.add(
-            mesh
-        );
-    }
-}
-
-
-/* =========================================================
-   ROAD GENERATION
-========================================================= */
-
-function createRoad(
-    group,
-    x,
-    z,
-    axis,
-    type,
-    width
-) {
-
-    createRoadSurface(
-        group,
-        x,
-        z,
-        axis,
-        width
-    );
-
-
-    if (
-        type === "highway"
-    ) {
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            -(width / 2 - 1.4),
-            CHUNK_SIZE + 16,
-            .25,
-            whiteRoadMaterial
-        );
-
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            width / 2 - 1.4,
-            CHUNK_SIZE + 16,
-            .25,
-            whiteRoadMaterial
-        );
-
-
-        addDashedLine(
-            group,
-            x,
-            z,
-            axis,
-            yellowRoadMaterial
-        );
-
-
-        createGuardrails(
-            group,
-            x,
-            z,
-            axis,
-            width
-        );
-
-
-    } else if (
-        type === "major"
-    ) {
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            -(width / 2 - 1.5),
-            CHUNK_SIZE + 16,
-            .3,
-            whiteRoadMaterial
-        );
-
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            width / 2 - 1.5,
-            CHUNK_SIZE + 16,
-            .3,
-            whiteRoadMaterial
-        );
-
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            -.55,
-            CHUNK_SIZE + 16,
-            .18,
-            yellowRoadMaterial
-        );
-
-
-        addRoadLine(
-            group,
-            x,
-            z,
-            axis,
-            .55,
-            CHUNK_SIZE + 16,
-            .18,
-            yellowRoadMaterial
-        );
-
-
-        createSidewalks(
-            group,
-            x,
-            z,
-            axis,
-            width
-        );
-
-
-    } else {
-
-        addDashedLine(
-            group,
-            x,
-            z,
-            axis,
-            yellowRoadMaterial
-        );
-
-
-        createSidewalks(
-            group,
-            x,
-            z,
-            axis,
-            width
-        );
-    }
-}
-
-
-/* =========================================================
-   FIXED ROAD CHUNK STREAMING
-========================================================= */
-
-function generateRoads(
-    group,
-    cx,
-    cz
-) {
-
-    const minX =
-        cx * CHUNK_SIZE;
-
-    const maxX =
-        minX + CHUNK_SIZE;
-
-    const minZ =
-        cz * CHUNK_SIZE;
-
-    const maxZ =
-        minZ + CHUNK_SIZE;
-
-
-    /*
-       HORIZONTAL ROADS
-
-       IMPORTANT:
-       The old version only generated a road
-       if the road center belonged to the
-       current Z chunk.
-
-       That caused roads to disappear at
-       chunk borders.
-
-       Now we generate any road whose
-       physical width overlaps this chunk.
-    */
-
-    const horizontalStart =
-        Math.floor(
-            (minZ - 20) / 80
-        ) * 80;
-
-
-    for (
-        let roadZ = horizontalStart;
-        roadZ <= maxZ + 20;
-        roadZ += 80
-    ) {
-
-        const road =
-            getRoadCandidates(
-                0,
-                roadZ
-            )
-            .filter(
-                r => r.axis === "x"
-            )
-            .filter(
-                r =>
-                    Math.abs(
-                        roadZ -
-                        r.center
-                    ) <=
-                    r.width / 2
-            )
-            .sort(
-                (a, b) =>
-                    b.priority -
-                    a.priority
-            )[0];
-
-
-        if (!road) {
-            continue;
-        }
-
-
-        /*
-           Check whether the road
-           physically overlaps this chunk.
-        */
-
-        if (
-            road.center +
-            road.width / 2 <
-            minZ
-        ) {
-            continue;
-        }
-
-
-        if (
-            road.center -
-            road.width / 2 >
-            maxZ
-        ) {
-            continue;
-        }
-
-
-        createRoad(
-            group,
-            (minX + maxX) / 2,
-            road.center,
-            "x",
-            road.type,
-            road.width
-        );
-    }
-
-
-    /*
-       VERTICAL ROADS
-    */
-
-    const verticalStart =
-        Math.floor(
-            (minX - 20) / 80
-        ) * 80;
-
-
-    for (
-        let roadX = verticalStart;
-        roadX <= maxX + 20;
-        roadX += 80
-    ) {
-
-        const road =
-            getRoadCandidates(
-                roadX,
-                0
-            )
-            .filter(
-                r => r.axis === "z"
-            )
-            .filter(
-                r =>
-                    Math.abs(
-                        roadX -
-                        r.center
-                    ) <=
-                    r.width / 2
-            )
-            .sort(
-                (a, b) =>
-                    b.priority -
-                    a.priority
-            )[0];
-
-
-        if (!road) {
-            continue;
-        }
-
-
-        if (
-            road.center +
-            road.width / 2 <
-            minX
-        ) {
-            continue;
-        }
-
-
-        if (
-            road.center -
-            road.width / 2 >
-            maxX
-        ) {
-            continue;
-        }
-
-
-        createRoad(
-            group,
-            road.center,
-            (minZ + maxZ) / 2,
-            "z",
-            road.type,
-            road.width
-        );
-    }
-}
-
-
-/* =========================================================
-   STREET LIGHT
-========================================================= */
-
-function createStreetLight(
-    group,
-    x,
-    z
-) {
-
-    if (
-        !isClearOfRoad(
-            x,
-            z,
-            1
-        )
-    ) {
-
-        return;
-    }
-
-
-    const y =
-        terrainHeight(
-            x,
-            z
-        );
-
-
-    const pole =
-        new THREE.Mesh(
-            lampPoleGeometry,
-            lampMaterial
-        );
-
-    pole.userData.sharedGeometry =
-        true;
-
-    pole.position.set(
-        x,
-        y + 2.75,
-        z
-    );
-
-    pole.castShadow =
-        true;
-
-    group.add(
-        pole
-    );
-
-
-    const arm =
-        new THREE.Mesh(
-            lampArmGeometry,
-            lampMaterial
-        );
-
-    arm.userData.sharedGeometry =
-        true;
-
-    arm.position.set(
-        x + .32,
-        y + 5.35,
-        z
-    );
-
-    group.add(
-        arm
-    );
-
-
-    const glow =
-        new THREE.Mesh(
-            lampGlowGeometry,
-            lampGlowMaterial
-        );
-
-    glow.userData.sharedGeometry =
-        true;
-
-    glow.position.set(
-        x + .65,
-        y + 5.25,
-        z
-    );
-
-    group.add(
-        glow
-    );
-}
-
-
-function generateStreetLights(
-    group,
-    cx,
-    cz
-) {
-
-    const minX =
-        cx * CHUNK_SIZE;
-
-    const maxX =
-        minX + CHUNK_SIZE;
-
-    const minZ =
-        cz * CHUNK_SIZE;
-
-    const maxZ =
-        minZ + CHUNK_SIZE;
-
-
-    const zStart =
-        Math.floor(
-            (minZ - 20) / 80
-        ) * 80;
-
-
-    for (
-        let roadZ = zStart;
-        roadZ <= maxZ + 20;
-        roadZ += 80
-    ) {
-
-        const road =
-            getRoadCandidates(
-                0,
-                roadZ
-            )
-            .filter(
-                r => r.axis === "x"
-            )
-            .filter(
-                r =>
-                    Math.abs(
-                        roadZ -
-                        r.center
-                    ) <=
-                    r.width / 2
-            )
-            .sort(
-                (a, b) =>
-                    b.priority -
-                    a.priority
-            )[0];
-
-
-        if (
-            !road ||
-            road.type === "highway"
-        ) {
-
-            continue;
-        }
-
-
-        for (
-            const offset of [-85, 0, 85]
-        ) {
-
-            const x =
-                (minX + maxX) / 2 +
-                offset;
-
-            const z =
-                road.center +
-                road.width / 2 +
-                5;
-
-
-            createStreetLight(
-                group,
-                x,
-                z
-            );
-        }
-    }
-
-
-    const xStart =
-        Math.floor(
-            (minX - 20) / 80
-        ) * 80;
-
-
-    for (
-        let roadX = xStart;
-        roadX <= maxX + 20;
-        roadX += 80
-    ) {
-
-        const road =
-            getRoadCandidates(
-                roadX,
-                0
-            )
-            .filter(
-                r => r.axis === "z"
-            )
-            .filter(
-                r =>
-                    Math.abs(
-                        roadX -
-                        r.center
-                    ) <=
-                    r.width / 2
-            )
-            .sort(
-                (a, b) =>
-                    b.priority -
-                    a.priority
-            )[0];
-
-
-        if (
-            !road ||
-            road.type === "highway"
-        ) {
-
-            continue;
-        }
-
-
-        for (
-            const offset of [-85, 0, 85]
-        ) {
-
-            const z =
-                (minZ + maxZ) / 2 +
-                offset;
-
-            const x =
-                road.center +
-                road.width / 2 +
-                5;
-
-
-            createStreetLight(
-                group,
-                x,
-                z
-            );
-        }
-    }
-}
-
 
 /* =========================================================
    BUILDINGS
 ========================================================= */
 
-const buildingFiles = [
-    "./assets/buildings/large-building.glb",
-    "./assets/buildings/store.glb",
-    "./assets/buildings/apartment.glb",
-    "./assets/buildings/large-building-2.glb",
-    "./assets/buildings/bank.glb"
-];
-
-const buildingTemplates = [];
-
-
-async function loadBuildings() {
-
-    for (
-        const file of buildingFiles
-    ) {
-
-        try {
-
-            const gltf =
-                await gltfLoader.loadAsync(
-                    file
-                );
-
-
-            const root =
-                gltf.scene;
-
-
-            root.updateMatrixWorld(
-                true
-            );
-
-
-            const box =
-                new THREE.Box3()
-                .setFromObject(
-                    root
-                );
-
-
-            const size =
-                box.getSize(
-                    new THREE.Vector3()
-                );
-
-
-            const height =
-                Math.max(
-                    size.y,
-                    .001
-                );
-
-
-            const targetHeight =
-                randomRange(
-                    file.length,
-                    file.length * 2,
-                    18,
-                    38,
-                    50
-                );
-
-
-            root.scale.setScalar(
-                targetHeight /
-                height
-            );
-
-
-            root.updateMatrixWorld(
-                true
-            );
-
-
-            const correctedBox =
-                new THREE.Box3()
-                .setFromObject(
-                    root
-                );
-
-
-            root.position.y -=
-                correctedBox.min.y;
-
-
-            root.updateMatrixWorld(
-                true
-            );
-
-
-            root.traverse(
-                child => {
-
-                    if (
-                        child.isMesh
-                    ) {
-
-                        child.castShadow =
-                            true;
-
-                        child.receiveShadow =
-                            true;
-
-                        child.userData.sharedGeometry =
-                            true;
-                    }
-                }
-            );
-
-
-            const finalBox =
-                new THREE.Box3()
-                .setFromObject(
-                    root
-                );
-
-
-            const finalSize =
-                finalBox.getSize(
-                    new THREE.Vector3()
-                );
-
-
-            buildingTemplates.push({
-                root,
-                width: finalSize.x,
-                depth: finalSize.z
-            });
-
-
-        } catch (error) {
-
-            console.warn(
-                "Could not load building:",
-                file,
-                error
-            );
-        }
-    }
-}
-
-
-/* =========================================================
-   FALLBACK BUILDING
-========================================================= */
-
-function createFallbackBuilding(
-    group,
-    x,
-    z,
-    width,
-    depth,
-    height,
-    rotation
-) {
-
-    const geometry =
-        new THREE.BoxGeometry(
-            width,
-            height,
-            depth
-        );
-
-
-    const material =
-        new THREE.MeshStandardMaterial({
-            color: 0x737a82,
-            roughness: .85
-        });
-
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-
-    mesh.position.set(
-        x,
-        terrainHeight(
-            x,
-            z
-        ) +
-        height / 2,
-        z
-    );
-
-
-    mesh.rotation.y =
-        rotation;
-
-
-    mesh.castShadow =
-        true;
-
-    mesh.receiveShadow =
-        true;
-
-
-    group.add(
-        mesh
-    );
-}
-
-
-/* =========================================================
-   BUILDING GENERATION
-========================================================= */
-
 function generateBuildings(
     group,
     cx,
-    cz
+    cz,
+    biome
 ) {
-
-    const centerX =
-        cx * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-    const centerZ =
-        cz * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-
-    const biome =
-        getBiome(
-            centerX,
-            centerZ
-        );
-
-
-    let target =
-        0;
-
-
-    if (
-        biome === "city"
-    ) {
-
-        target = 13;
-
-    } else if (
-        biome === "countryside"
-    ) {
-
-        target = 2;
-    }
-
-
-    const lots = [];
-
-
-    if (
-        target === 0
-    ) {
-
-        group.userData.buildingLots =
-            lots;
-
-        return;
-    }
-
-
-    let attempts = 0;
-
-
-    while (
-        lots.length < target &&
-        attempts < target * 15
-    ) {
-
-        attempts++;
-
-
-        const x =
-            centerX +
-            randomRange(
-                cx * 19 + attempts,
-                cz * 23 + attempts,
-                -105,
-                105,
-                1
-            );
-
-
-        const z =
-            centerZ +
-            randomRange(
-                cx * 29 + attempts,
-                cz * 31 + attempts,
-                -105,
-                105,
-                2
-            );
-
-
-        const rotation =
-            randomRange(
-                x,
-                z,
-                -.12,
-                .12,
-                3
-            );
-
-
-        let template = null;
-
-
-        if (
-            buildingTemplates.length
-        ) {
-
-            const index =
-                Math.floor(
-                    randomRange(
-                        x,
-                        z,
-                        0,
-                        buildingTemplates.length,
-                        4
-                    )
-                );
-
-
-            template =
-                buildingTemplates[
-                    Math.min(
-                        index,
-                        buildingTemplates.length - 1
-                    )
-                ];
-        }
-
-
-        let width = 16;
-        let depth = 16;
-
-
-        if (
-            template
-        ) {
-
-            width =
-                template.width;
-
-            depth =
-                template.depth;
-
-        } else {
-
-            width =
-                randomRange(
-                    x,
-                    z,
-                    11,
-                    23,
-                    5
-                );
-
-            depth =
-                randomRange(
-                    x,
-                    z,
-                    11,
-                    23,
-                    6
-                );
-        }
-
-
-        const halfX =
-            width / 2;
-
-        const halfZ =
-            depth / 2;
-
-
-        /*
-           First road test.
-        */
-
-        if (
-            buildingTouchesRoad(
-                x,
-                z,
-                halfX,
-                halfZ,
-                rotation
-            )
-        ) {
-
-            continue;
-        }
-
-
-        const radius =
-            Math.max(
-                halfX,
-                halfZ
-            );
-
-
-        /*
-           Building-to-building spacing.
-        */
-
-        let blocked = false;
-
-
-        for (
-            const lot of lots
-        ) {
-
-            const distance =
-                Math.hypot(
-                    x - lot.x,
-                    z - lot.z
-                );
-
-
-            if (
-                distance <
-                radius +
-                lot.radius +
-                8
-            ) {
-
-                blocked = true;
-                break;
-            }
-        }
-
-
-        if (
-            blocked
-        ) {
-
-            continue;
-        }
-
-
-        const y =
-            terrainHeight(
-                x,
-                z
-            );
-
-
-        if (
-            template
-        ) {
-
-            const building =
-                template.root.clone(
-                    true
-                );
-
-
-            building.position.set(
-                x,
-                y,
-                z
-            );
-
-
-            building.rotation.y =
-                rotation;
-
-
-            building.traverse(
-                child => {
-
-                    if (
-                        child.isMesh
-                    ) {
-
-                        child.userData.sharedGeometry =
-                            true;
-
-                        child.castShadow =
-                            true;
-
-                        child.receiveShadow =
-                            true;
-                    }
-                }
-            );
-
-
-            group.add(
-                building
-            );
-
-        } else {
-
-            const height =
-                randomRange(
-                    x,
-                    z,
-                    12,
-                    32,
-                    7
-                );
-
-
-            createFallbackBuilding(
-                group,
-                x,
-                z,
-                width,
-                depth,
-                height,
-                rotation
-            );
-        }
-
-
-        lots.push({
-            x,
-            z,
-            radius
-        });
-    }
-
-
-    group.userData.buildingLots =
-        lots;
-}
-
-
-/* =========================================================
-   TREES
-========================================================= */
-
-function createTree(
-    group,
-    x,
-    z,
-    scale
-) {
-
-    const tree =
-        new THREE.Group();
-
-
-    const trunk =
-        new THREE.Mesh(
-            treeTrunkGeometry,
-            treeTrunkMaterial
-        );
-
-
-    trunk.userData.sharedGeometry =
-        true;
-
-
-    trunk.position.y =
-        1.2;
-
-
-    trunk.castShadow =
-        true;
-
-    trunk.receiveShadow =
-        true;
-
-
-    tree.add(
-        trunk
-    );
-
-
-    const leaves =
-        new THREE.Mesh(
-            treeLeafGeometry,
-            treeLeafMaterial
-        );
-
-
-    leaves.userData.sharedGeometry =
-        true;
-
-
-    leaves.position.y =
-        2.7;
-
-
-    leaves.scale.set(
-        1.15,
-        1.35,
-        1.15
-    );
-
-
-    leaves.castShadow =
-        true;
-
-    leaves.receiveShadow =
-        true;
-
-
-    tree.add(
-        leaves
-    );
-
-
-    tree.position.set(
-        x,
-        terrainHeight(
-            x,
-            z
-        ),
-        z
-    );
-
-
-    tree.scale.setScalar(
-        scale
-    );
-
-
-    group.add(
-        tree
-    );
-}
-
-
-function generateTrees(
-    group,
-    cx,
-    cz
-) {
-
-    const centerX =
-        cx * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-    const centerZ =
-        cz * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-
-    const biome =
-        getBiome(
-            centerX,
-            centerZ
-        );
-
 
     let amount = 0;
 
+    if (biome === "downtown")
+        amount = 13;
 
-    if (
-        biome === "city"
-    ) {
+    else if (biome === "suburbs")
+        amount = 9;
 
+    else if (biome === "industrial")
         amount = 7;
 
-    } else if (
-        biome === "countryside"
-    ) {
+    else if (biome === "countryside")
+        amount = 3;
 
-        amount = 22;
+    else if (biome === "coast")
+        amount = 3;
 
-    } else if (
-        biome === "coast"
-    ) {
+    else
+        amount = 1;
 
-        amount = 8;
+    const lots = [];
 
-    } else {
-
-        amount = 14;
-    }
-
-
-    const lots =
-        group.userData.buildingLots ||
-        [];
-
-
-    let attempts = 0;
-    let created = 0;
-
-
-    while (
-        created < amount &&
-        attempts < amount * 15
-    ) {
-
-        attempts++;
-
-
-        const x =
-            centerX +
-            randomRange(
-                cx * 37 + attempts,
-                cz * 41 + attempts,
-                -112,
-                112,
-                20
-            );
-
-
-        const z =
-            centerZ +
-            randomRange(
-                cx * 43 + attempts,
-                cz * 47 + attempts,
-                -112,
-                112,
-                21
-            );
-
-
-        /*
-           Large exclusion radius.
-        */
-
-        if (
-            !isClearOfRoad(
-                x,
-                z,
-                8
-            )
-        ) {
-
-            continue;
-        }
-
-
-        let nearBuilding =
-            false;
-
-
-        for (
-            const lot of lots
-        ) {
-
-            if (
-                Math.hypot(
-                    x - lot.x,
-                    z - lot.z
-                ) <
-                lot.radius + 8
-            ) {
-
-                nearBuilding = true;
-                break;
-            }
-        }
-
-
-        if (
-            nearBuilding
-        ) {
-
-            continue;
-        }
-
-
-        createTree(
-            group,
-            x,
-            z,
-            randomRange(
-                x,
-                z,
-                .75,
-                1.35,
-                22
-            )
-        );
-
-
-        created++;
-    }
-}
-
-
-/* =========================================================
-   NATURE
-========================================================= */
-
-function generateNature(
-    group,
-    cx,
-    cz
-) {
-
-    const centerX =
-        cx * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-    const centerZ =
-        cz * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-
-    const biome =
-        getBiome(
-            centerX,
-            centerZ
-        );
-
-
-    if (
-        biome === "city"
-    ) {
-
-        return;
-    }
-
-
-    const amount =
-        biome === "mountain"
-            ? 16
-            : 12;
-
+    group.userData.buildingLots = lots;
 
     for (
         let i = 0;
@@ -3207,300 +1543,756 @@ function generateNature(
         i++
     ) {
 
-        const x =
-            centerX +
-            randomRange(
-                cx * 53 + i,
-                cz * 59 + i,
-                -110,
-                110,
-                30
+        const sx =
+            cx * 100 +
+            i * 31;
+
+        const sz =
+            cz * 100 +
+            i * 47;
+
+        let placed = false;
+
+        for (
+            let attempt = 0;
+            attempt < 18 && !placed;
+            attempt++
+        ) {
+
+            const x =
+                cx * CHUNK_SIZE +
+                randomRange(
+                    sx + attempt,
+                    sz,
+                    18,
+                    CHUNK_SIZE - 18,
+                    1
+                );
+
+            const z =
+                cz * CHUNK_SIZE +
+                randomRange(
+                    sx,
+                    sz + attempt,
+                    18,
+                    CHUNK_SIZE - 18,
+                    2
+                );
+
+            const rotation =
+                randomRange(
+                    sx + attempt,
+                    sz + attempt,
+                    0,
+                    Math.PI * 2,
+                    3
+                );
+
+            let halfX = 7;
+            let halfZ = 7;
+
+            if (
+                biome === "downtown"
+            ) {
+
+                halfX = 8;
+                halfZ = 8;
+
+            } else if (
+                biome === "industrial"
+            ) {
+
+                halfX = 13;
+                halfZ = 10;
+
+            } else if (
+                biome === "suburbs"
+            ) {
+
+                halfX = 6;
+                halfZ = 6;
+            }
+
+            if (
+                buildingTouchesRoad(
+                    x,
+                    z,
+                    halfX,
+                    halfZ,
+                    rotation
+                )
+            )
+                continue;
+
+            /*
+                Avoid extreme terrain.
+            */
+
+            const y =
+                terrainHeight(x, z);
+
+            if (
+                y < -1.5 ||
+                y > 18
+            )
+                continue;
+
+            /*
+                Avoid existing buildings.
+            */
+
+            let overlaps = false;
+
+            for (const lot of lots) {
+
+                const dx =
+                    x - lot.x;
+
+                const dz =
+                    z - lot.z;
+
+                const minDistance =
+                    lot.radius +
+                    Math.max(
+                        halfX,
+                        halfZ
+                    ) +
+                    5;
+
+                if (
+                    dx * dx +
+                    dz * dz <
+                    minDistance *
+                    minDistance
+                ) {
+
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (overlaps)
+                continue;
+
+            let building;
+
+            if (
+                buildingTemplates.length > 0
+            ) {
+
+                const index =
+                    Math.floor(
+                        randomRange(
+                            sx,
+                            sz,
+                            0,
+                            buildingTemplates.length,
+                            7
+                        )
+                    );
+
+                const template =
+                    buildingTemplates[
+                        Math.min(
+                            index,
+                            buildingTemplates.length - 1
+                        )
+                    ];
+
+                building =
+                    template.clone(true);
+
+                const scale =
+                    biome === "downtown"
+                        ? randomRange(
+                            sx,
+                            sz,
+                            0.85,
+                            1.45,
+                            8
+                        )
+                        : randomRange(
+                            sx,
+                            sz,
+                            0.7,
+                            1.15,
+                            8
+                        );
+
+                building.scale.multiplyScalar(
+                    scale
+                );
+
+            } else {
+
+                let type = 0;
+
+                if (
+                    biome === "industrial"
+                )
+                    type = 1;
+
+                else if (
+                    biome === "suburbs"
+                )
+                    type = 2;
+
+                else if (
+                    biome === "downtown"
+                )
+                    type = 3;
+
+                building =
+                    createFallbackBuilding(
+                        type
+                    );
+            }
+
+            building.position.set(
+                x,
+                y,
+                z
             );
 
+            building.rotation.y =
+                rotation;
 
-        const z =
-            centerZ +
-            randomRange(
-                cx * 61 + i,
-                cz * 67 + i,
-                -110,
-                110,
-                31
-            );
+            group.add(building);
 
-
-        if (
-            !isClearOfRoad(
+            lots.push({
                 x,
                 z,
-                5
-            )
-        ) {
+                radius:
+                    Math.max(
+                        halfX,
+                        halfZ
+                    )
+            });
 
-            continue;
-        }
-
-
-        if (
-            i % 2 === 0
-        ) {
-
-            const bush =
-                new THREE.Mesh(
-                    bushGeometry,
-                    bushMaterial
-                );
-
-
-            bush.userData.sharedGeometry =
-                true;
-
-
-            const s =
-                randomRange(
-                    x,
-                    z,
-                    .7,
-                    1.8,
-                    32
-                );
-
-
-            bush.scale.set(
-                s * 1.3,
-                s,
-                s * 1.3
-            );
-
-
-            bush.position.set(
-                x,
-                terrainHeight(
-                    x,
-                    z
-                ) + .5,
-                z
-            );
-
-
-            bush.castShadow =
-                true;
-
-
-            group.add(
-                bush
-            );
-
-        } else {
-
-            const rock =
-                new THREE.Mesh(
-                    rockGeometry,
-                    rockMaterial
-                );
-
-
-            rock.userData.sharedGeometry =
-                true;
-
-
-            const s =
-                randomRange(
-                    x,
-                    z,
-                    .3,
-                    1.3,
-                    33
-                );
-
-
-            rock.scale.set(
-                s * 1.4,
-                s * .65,
-                s
-            );
-
-
-            rock.position.set(
-                x,
-                terrainHeight(
-                    x,
-                    z
-                ) + .25,
-                z
-            );
-
-
-            rock.rotation.set(
-                randomRange(
-                    x,
-                    z,
-                    0,
-                    Math.PI,
-                    34
-                ),
-                randomRange(
-                    x,
-                    z,
-                    0,
-                    Math.PI,
-                    35
-                ),
-                randomRange(
-                    x,
-                    z,
-                    0,
-                    Math.PI,
-                    36
-                )
-            );
-
-
-            rock.castShadow =
-                true;
-
-
-            group.add(
-                rock
-            );
+            placed = true;
         }
     }
 }
 
+/* =========================================================
+   TREES / VEGETATION
+========================================================= */
+
+function generateVegetation(
+    group,
+    cx,
+    cz,
+    biome
+) {
+
+    let count;
+
+    switch (biome) {
+
+        case "forest":
+            count = 30;
+            break;
+
+        case "countryside":
+            count = 18;
+            break;
+
+        case "suburbs":
+            count = 11;
+            break;
+
+        case "coast":
+            count = 10;
+            break;
+
+        case "mountain":
+            count = 12;
+            break;
+
+        case "downtown":
+            count = 5;
+            break;
+
+        case "industrial":
+            count = 4;
+            break;
+
+        default:
+            count = 10;
+    }
+
+    const lots =
+        group.userData.buildingLots ||
+        [];
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const x =
+            cx * CHUNK_SIZE +
+            randomRange(
+                cx * 19 + i,
+                cz * 37,
+                10,
+                CHUNK_SIZE - 10,
+                20
+            );
+
+        const z =
+            cz * CHUNK_SIZE +
+            randomRange(
+                cx * 53,
+                cz * 71 + i,
+                10,
+                CHUNK_SIZE - 10,
+                21
+            );
+
+        const treeRadius =
+            biome === "forest"
+                ? 4
+                : 3;
+
+        /*
+            This is the important part:
+            trees can NEVER be placed on roads.
+        */
+
+        if (
+            !isRoadClear(
+                x,
+                z,
+                treeRadius
+            )
+        )
+            continue;
+
+        let nearBuilding = false;
+
+        for (const lot of lots) {
+
+            const dx =
+                x - lot.x;
+
+            const dz =
+                z - lot.z;
+
+            if (
+                dx * dx +
+                dz * dz <
+                Math.pow(
+                    lot.radius + 5,
+                    2
+                )
+            ) {
+
+                nearBuilding = true;
+                break;
+            }
+        }
+
+        if (nearBuilding)
+            continue;
+
+        const y =
+            terrainHeight(x, z);
+
+        if (
+            y < -1.5 ||
+            y > 30
+        )
+            continue;
+
+        const scale =
+            randomRange(
+                x,
+                z,
+                0.65,
+                biome === "forest"
+                    ? 1.35
+                    : 1.05,
+                22
+            );
+
+        const tree =
+            createTree(
+                x,
+                y,
+                z,
+                scale,
+                Math.floor(
+                    randomRange(
+                        x,
+                        z,
+                        0,
+                        3,
+                        23
+                    )
+                )
+            );
+
+        group.add(tree);
+    }
+
+    /*
+        Bushes.
+    */
+
+    const bushCount =
+        biome === "forest"
+            ? 18
+            : biome === "countryside"
+                ? 12
+                : 5;
+
+    for (
+        let i = 0;
+        i < bushCount;
+        i++
+    ) {
+
+        const x =
+            cx * CHUNK_SIZE +
+            randomRange(
+                cx * 91 + i,
+                cz * 41,
+                8,
+                CHUNK_SIZE - 8,
+                30
+            );
+
+        const z =
+            cz * CHUNK_SIZE +
+            randomRange(
+                cx * 27,
+                cz * 83 + i,
+                8,
+                CHUNK_SIZE - 8,
+                31
+            );
+
+        if (
+            !isRoadClear(
+                x,
+                z,
+                3
+            )
+        )
+            continue;
+
+        const bush =
+            new THREE.Mesh(
+                bushGeometry,
+                bushMaterials[
+                    i %
+                    bushMaterials.length
+                ]
+            );
+
+        bush.position.set(
+            x,
+            terrainHeight(x, z) + 0.45,
+            z
+        );
+
+        bush.scale.set(
+            randomRange(
+                x,
+                z,
+                0.6,
+                1.2,
+                32
+            ),
+            randomRange(
+                x,
+                z,
+                0.5,
+                0.9,
+                33
+            ),
+            randomRange(
+                x,
+                z,
+                0.6,
+                1.2,
+                34
+            )
+        );
+
+        bush.castShadow = true;
+
+        bush.userData.sharedGeometry = true;
+
+        group.add(bush);
+    }
+}
+
+/* =========================================================
+   ROCKS
+========================================================= */
+
+function generateRocks(
+    group,
+    cx,
+    cz,
+    biome
+) {
+
+    if (
+        biome !== "mountain" &&
+        biome !== "countryside" &&
+        biome !== "coast"
+    )
+        return;
+
+    const count =
+        biome === "mountain"
+            ? 15
+            : 6;
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const x =
+            cx * CHUNK_SIZE +
+            randomRange(
+                cx * 17 + i,
+                cz * 23,
+                10,
+                CHUNK_SIZE - 10,
+                40
+            );
+
+        const z =
+            cz * CHUNK_SIZE +
+            randomRange(
+                cx * 31,
+                cz * 43 + i,
+                10,
+                CHUNK_SIZE - 10,
+                41
+            );
+
+        if (
+            !isRoadClear(
+                x,
+                z,
+                4
+            )
+        )
+            continue;
+
+        const rock =
+            new THREE.Mesh(
+                rockGeometry,
+                rockMaterial
+            );
+
+        rock.position.set(
+            x,
+            terrainHeight(x, z) + 0.4,
+            z
+        );
+
+        rock.scale.set(
+            randomRange(
+                x,
+                z,
+                0.5,
+                1.8,
+                42
+            ),
+            randomRange(
+                x,
+                z,
+                0.4,
+                1.4,
+                43
+            ),
+            randomRange(
+                x,
+                z,
+                0.5,
+                1.7,
+                44
+            )
+        );
+
+        rock.rotation.set(
+            randomRange(
+                x,
+                z,
+                0,
+                Math.PI,
+                45
+            ),
+            randomRange(
+                x,
+                z,
+                0,
+                Math.PI,
+                46
+            ),
+            randomRange(
+                x,
+                z,
+                0,
+                Math.PI,
+                47
+            )
+        );
+
+        rock.castShadow = true;
+
+        rock.userData.sharedGeometry = true;
+
+        group.add(rock);
+    }
+}
 
 /* =========================================================
    MOUNTAINS
 ========================================================= */
 
+const mountainGeometry =
+    new THREE.ConeGeometry(
+        1,
+        1,
+        8
+    );
+
+const mountainMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x5c625d,
+        roughness: 1
+    });
+
 function generateMountains(
     group,
     cx,
-    cz
+    cz,
+    biome
 ) {
 
-    const centerX =
-        cx * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-    const centerZ =
-        cz * CHUNK_SIZE +
-        CHUNK_SIZE / 2;
-
-
     if (
-        getBiome(
-            centerX,
-            centerZ
-        ) !== "mountain"
-    ) {
-
+        biome !== "mountain"
+    )
         return;
-    }
 
+    const count = 5;
 
     for (
         let i = 0;
-        i < 4;
+        i < count;
         i++
     ) {
 
         const x =
-            centerX +
+            cx * CHUNK_SIZE +
             randomRange(
-                cx * 73 + i,
-                cz * 79 + i,
-                -100,
-                100,
-                40
+                cx * 51 + i,
+                cz * 73,
+                -20,
+                CHUNK_SIZE + 20,
+                50
             );
-
 
         const z =
-            centerZ +
+            cz * CHUNK_SIZE +
             randomRange(
-                cx * 83 + i,
-                cz * 89 + i,
-                -100,
-                100,
-                41
+                cx * 17,
+                cz * 61 + i,
+                -20,
+                CHUNK_SIZE + 20,
+                51
             );
 
+        if (
+            !isRoadClear(
+                x,
+                z,
+                18
+            )
+        )
+            continue;
 
-        const radius =
+        const mountain =
+            new THREE.Mesh(
+                mountainGeometry,
+                mountainMaterial
+            );
+
+        const width =
             randomRange(
                 x,
                 z,
-                20,
-                65,
-                42
+                25,
+                70,
+                52
             );
-
 
         const height =
             randomRange(
                 x,
                 z,
-                40,
-                120,
-                43
+                35,
+                100,
+                53
             );
-
-
-        const mountain =
-            new THREE.Mesh(
-                mountainGeometry,
-                new THREE.MeshStandardMaterial({
-                    color: 0x697068,
-                    roughness: 1
-                })
-            );
-
-
-        mountain.userData.sharedGeometry =
-            true;
-
-
-        mountain.scale.set(
-            radius,
-            height,
-            radius
-        );
-
 
         mountain.position.set(
             x,
-            terrainHeight(
-                x,
-                z
-            ) +
-            height / 2,
+            terrainHeight(x, z) +
+                height / 2 -
+                4,
             z
         );
 
-
-        mountain.castShadow =
-            true;
-
-        mountain.receiveShadow =
-            true;
-
-
-        group.add(
-            mountain
+        mountain.scale.set(
+            width,
+            height,
+            width
         );
+
+        mountain.castShadow = true;
+        mountain.receiveShadow = true;
+
+        mountain.userData.sharedGeometry = true;
+
+        group.add(mountain);
     }
 }
-
 
 /* =========================================================
    WATER
 ========================================================= */
 
+const waterMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x4d91b2,
+        roughness: 0.22,
+        metalness: 0.05,
+        transparent: true,
+        opacity: 0.78
+    });
+
 function generateWater(
     group,
     cx,
-    cz
+    cz,
+    biome
 ) {
+
+    if (
+        biome !== "coast"
+    )
+        return;
 
     const centerX =
         cx * CHUNK_SIZE +
@@ -3510,258 +2302,226 @@ function generateWater(
         cz * CHUNK_SIZE +
         CHUNK_SIZE / 2;
 
-
-    if (
-        getBiome(
-            centerX,
-            centerZ
-        ) !== "coast"
-    ) {
-
-        return;
-    }
-
-
-    const terrain =
+    const centerHeight =
         terrainHeight(
             centerX,
             centerZ
         );
 
+    if (
+        centerHeight > 3
+    )
+        return;
 
-    /*
-       Never allow the water to sit
-       above the ground/road system.
-    */
-
-    const waterY =
-        Math.min(
-            WATER_LEVEL,
-            terrain - .35
+    const geometry =
+        new THREE.PlaneGeometry(
+            CHUNK_SIZE + 10,
+            CHUNK_SIZE + 10
         );
 
+    geometry.rotateX(
+        -Math.PI / 2
+    );
 
     const water =
         new THREE.Mesh(
-            waterGeometry,
+            geometry,
             waterMaterial
         );
 
-
-    water.userData.sharedGeometry =
-        true;
-
-
-    water.rotation.x =
-        -Math.PI / 2;
-
-
-    water.scale.set(
-        CHUNK_SIZE * 1.15,
-        CHUNK_SIZE * 1.15,
-        1
-    );
-
-
     water.position.set(
         centerX,
-        waterY,
+        -1.7,
         centerZ
     );
 
+    water.receiveShadow = false;
 
-    water.receiveShadow =
-        true;
-
-
-    group.add(
-        water
-    );
+    group.add(water);
 }
 
-
 /* =========================================================
-   INTERSECTION
+   STREETLIGHTS
 ========================================================= */
 
-function createIntersection(
-    group,
+const poleGeometry =
+    new THREE.CylinderGeometry(
+        0.07,
+        0.1,
+        5.5,
+        8
+    );
+
+const armGeometry =
+    new THREE.BoxGeometry(
+        1.2,
+        0.08,
+        0.08
+    );
+
+const lampGeometry =
+    new THREE.SphereGeometry(
+        0.12,
+        8,
+        8
+    );
+
+const poleMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x25282b,
+        metalness: 0.65,
+        roughness: 0.45
+    });
+
+const lampMaterial =
+    new THREE.MeshBasicMaterial({
+        color: 0xffe4ad
+    });
+
+const streetLampLight =
+    new THREE.PointLight(
+        0xffd99b,
+        0,
+        30
+    );
+
+function createStreetLight(
     x,
-    z
+    z,
+    rotation
 ) {
 
-    if (
-        Math.abs(x) >
-        CITY_RADIUS ||
-        Math.abs(z) >
-        CITY_RADIUS
-    ) {
+    const group =
+        new THREE.Group();
 
-        return;
-    }
-
-
-    const isXMajor =
-        Math.abs(
-            x -
-            Math.round(x / 240) * 240
-        ) < .001;
-
-
-    const isZMajor =
-        Math.abs(
-            z -
-            Math.round(z / 240) * 240
-        ) < .001;
-
-
-    if (
-        !isXMajor ||
-        !isZMajor
-    ) {
-
-        return;
-    }
-
-
-    const geometry =
-        new THREE.CylinderGeometry(
-            2.4,
-            2.6,
-            .12,
-            20
-        );
-
-
-    const material =
-        new THREE.MeshStandardMaterial({
-            color: 0x777a76,
-            roughness: 1
-        });
-
-
-    const island =
+    const pole =
         new THREE.Mesh(
-            geometry,
-            material
+            poleGeometry,
+            poleMaterial
         );
 
+    pole.position.y =
+        2.75;
 
-    island.position.set(
+    pole.castShadow = true;
+
+    pole.userData.sharedGeometry = true;
+
+    group.add(pole);
+
+    const arm =
+        new THREE.Mesh(
+            armGeometry,
+            poleMaterial
+        );
+
+    arm.position.set(
+        0.55,
+        5.2,
+        0
+    );
+
+    arm.rotation.y =
+        rotation;
+
+    arm.userData.sharedGeometry = true;
+
+    group.add(arm);
+
+    const lamp =
+        new THREE.Mesh(
+            lampGeometry,
+            lampMaterial
+        );
+
+    lamp.position.set(
+        1.05,
+        5.1,
+        0
+    );
+
+    lamp.userData.sharedGeometry = true;
+
+    group.add(lamp);
+
+    const light =
+        new THREE.PointLight(
+            0xffd59c,
+            0,
+            26,
+            2
+        );
+
+    light.position.set(
+        1.05,
+        5.0,
+        0
+    );
+
+    group.add(light);
+
+    group.position.set(
         x,
-        getSurfaceHeight(
-            x,
-            z
-        ) + .08,
+        terrainHeight(x, z),
         z
     );
 
-
-    island.receiveShadow =
-        true;
-
-
-    group.add(
-        island
-    );
+    return group;
 }
 
-
-function generateIntersections(
+function generateStreetLights(
     group,
     cx,
-    cz
+    cz,
+    biome
 ) {
+
+    if (
+        biome !== "downtown" &&
+        biome !== "suburbs" &&
+        biome !== "industrial"
+    )
+        return;
 
     const minX =
         cx * CHUNK_SIZE;
 
-    const maxX =
-        minX + CHUNK_SIZE;
-
     const minZ =
         cz * CHUNK_SIZE;
 
-    const maxZ =
-        minZ + CHUNK_SIZE;
-
-
-    const startX =
-        Math.ceil(
-            minX / 240
-        ) * 240;
-
-
-    const startZ =
-        Math.ceil(
-            minZ / 240
-        ) * 240;
-
-
     for (
-        let x = startX;
-        x <= maxX;
-        x += 240
+        let i = 0;
+        i < 3;
+        i++
     ) {
 
+        const x =
+            minX +
+            35 +
+            i * 80;
+
+        const z =
+            minZ + 28;
+
         if (
-            x < minX ||
-            x > maxX
-        ) {
-
-            continue;
-        }
-
-
-        for (
-            let z = startZ;
-            z <= maxZ;
-            z += 240
-        ) {
-
-            if (
-                z < minZ ||
-                z > maxZ
-            ) {
-
-                continue;
-            }
-
-
-            /*
-               Only generate an intersection
-               in one deterministic chunk.
-            */
-
-            const ownerX =
-                Math.floor(
-                    x / CHUNK_SIZE
-                );
-
-            const ownerZ =
-                Math.floor(
-                    z / CHUNK_SIZE
-                );
-
-
-            if (
-                ownerX !== cx ||
-                ownerZ !== cz
-            ) {
-
-                continue;
-            }
-
-
-            createIntersection(
-                group,
+            isRoadClear(
                 x,
-                z
-            );
+                z,
+                1
+            )
+        ) {
+
+            const lamp =
+                createStreetLight(
+                    x,
+                    z,
+                    0
+                );
+
+            group.add(lamp);
         }
     }
 }
-
 
 /* =========================================================
    CHUNK GENERATION
@@ -3775,42 +2535,134 @@ function generateChunk(
     const key =
         `${cx},${cz}`;
 
-
     if (
         chunks.has(key)
-    ) {
-
+    )
         return;
-    }
-
 
     const group =
         new THREE.Group();
 
-
     group.name =
         `Chunk_${cx}_${cz}`;
 
+    group.userData.cx = cx;
+    group.userData.cz = cz;
+
+    const centerX =
+        cx * CHUNK_SIZE +
+        CHUNK_SIZE / 2;
+
+    const centerZ =
+        cz * CHUNK_SIZE +
+        CHUNK_SIZE / 2;
+
+    const biome =
+        getBiome(
+            centerX,
+            centerZ
+        );
+
+    group.userData.biome =
+        biome;
 
     /*
-       Correct generation order:
+        =====================================================
+        GROUND
+        =====================================================
 
-       1. terrain
-       2. roads
-       3. road details
-       4. buildings
-       5. trees
-       6. nature
-       7. mountains
-       8. water
+        Every single chunk gets a ground mesh.
+
+        This is what fixes the "grass stops after spawn"
+        problem.
     */
 
-    createTerrain(
-        group,
-        cx,
-        cz
+    const groundGeometry =
+        new THREE.PlaneGeometry(
+            CHUNK_SIZE + 4,
+            CHUNK_SIZE + 4,
+            18,
+            18
+        );
+
+    groundGeometry.rotateX(
+        -Math.PI / 2
     );
 
+    const pos =
+        groundGeometry.attributes.position;
+
+    for (
+        let i = 0;
+        i < pos.count;
+        i++
+    ) {
+
+        const lx =
+            pos.getX(i);
+
+        const lz =
+            pos.getZ(i);
+
+        const wx =
+            centerX + lx;
+
+        const wz =
+            centerZ + lz;
+
+        pos.setY(
+            i,
+            terrainHeight(
+                wx,
+                wz
+            )
+        );
+    }
+
+    pos.needsUpdate = true;
+
+    groundGeometry.computeVertexNormals();
+
+    const grassColors = {
+
+        downtown: 0x5b714c,
+        suburbs: 0x628052,
+        industrial: 0x59684d,
+        countryside: 0x708955,
+        forest: 0x45663d,
+        mountain: 0x65705c,
+        coast: 0x789064
+    };
+
+    const groundMaterial =
+        new THREE.MeshStandardMaterial({
+            color:
+                grassColors[biome] ||
+                0x63784e,
+            roughness: 1,
+            metalness: 0
+        });
+
+    const ground =
+        new THREE.Mesh(
+            groundGeometry,
+            groundMaterial
+        );
+
+    ground.receiveShadow = true;
+
+    group.add(ground);
+
+    /*
+        Add world features.
+    */
+
+    generateWater(
+        group,
+        cx,
+        cz,
+        biome
+    );
 
     generateRoads(
         group,
@@ -3818,349 +2670,331 @@ function generateChunk(
         cz
     );
 
-
-    generateStreetLights(
-        group,
-        cx,
-        cz
-    );
-
-
     generateBuildings(
         group,
         cx,
-        cz
+        cz,
+        biome
     );
 
-
-    generateTrees(
+    generateVegetation(
         group,
         cx,
-        cz
+        cz,
+        biome
     );
 
-
-    generateNature(
+    generateRocks(
         group,
         cx,
-        cz
+        cz,
+        biome
     );
-
 
     generateMountains(
         group,
         cx,
-        cz
+        cz,
+        biome
     );
 
-
-    generateWater(
+    generateStreetLights(
         group,
         cx,
-        cz
+        cz,
+        biome
     );
 
-
-    generateIntersections(
-        group,
-        cx,
-        cz
-    );
-
-
-    scene.add(
-        group
-    );
-
+    scene.add(group);
 
     chunks.set(
         key,
-        {
-            group,
-            cx,
-            cz
-        }
+        group
     );
 }
-
 
 /* =========================================================
    DISPOSAL
 ========================================================= */
 
-function disposeGroup(
-    group
-) {
+function disposeGroup(group) {
 
-    group.traverse(
-        object => {
+    group.traverse(obj => {
+
+        if (
+            !obj.isMesh
+        )
+            return;
+
+        /*
+            Building and nature geometry is shared.
+
+            NEVER dispose it here.
+        */
+
+        if (
+            obj.userData.sharedGeometry
+        )
+            return;
+
+        if (
+            obj.geometry
+        ) {
+
+            obj.geometry.dispose();
+        }
+
+        /*
+            Only dispose materials that were
+            created specifically for this object.
+        */
+
+        if (
+            obj.material &&
+            obj.userData.ownedMaterial
+        ) {
 
             if (
-                object.isMesh &&
-                object.geometry &&
-                !object.userData.sharedGeometry
+                Array.isArray(
+                    obj.material
+                )
             ) {
 
-                object.geometry.dispose();
+                obj.material.forEach(
+                    m => m.dispose()
+                );
+
+            } else {
+
+                obj.material.dispose();
             }
         }
-    );
+    });
 }
-
 
 /* =========================================================
    UNLOAD
 ========================================================= */
 
-function unloadFarChunks(
+function unloadChunk(
     cx,
     cz
 ) {
 
-    for (
-        const [
-            key,
-            chunk
-        ] of chunks
-    ) {
+    const key =
+        `${cx},${cz}`;
 
-        const dx =
-            Math.abs(
-                chunk.cx - cx
-            );
+    const chunk =
+        chunks.get(key);
 
-        const dz =
-            Math.abs(
-                chunk.cz - cz
-            );
+    if (!chunk)
+        return;
 
+    scene.remove(chunk);
 
-        if (
-            dx > UNLOAD_RADIUS ||
-            dz > UNLOAD_RADIUS
-        ) {
+    disposeGroup(chunk);
 
-            scene.remove(
-                chunk.group
-            );
-
-
-            disposeGroup(
-                chunk.group
-            );
-
-
-            chunks.delete(
-                key
-            );
-        }
-    }
+    chunks.delete(key);
 }
 
-
 /* =========================================================
-   STREAMING
+   STREAM WORLD
 ========================================================= */
 
 function updateWorldStreaming(
+    carX,
+    carZ,
     force = false
 ) {
 
-    if (
-        !worldReady ||
-        !carRoot
-    ) {
-
-        return;
-    }
-
-
     const cx =
         Math.floor(
-            carRoot.position.x /
-            CHUNK_SIZE
+            carX / CHUNK_SIZE
         );
-
 
     const cz =
         Math.floor(
-            carRoot.position.z /
-            CHUNK_SIZE
+            carZ / CHUNK_SIZE
         );
-
 
     if (
         !force &&
         cx === lastChunkX &&
         cz === lastChunkZ
-    ) {
-
+    )
         return;
-    }
-
 
     lastChunkX = cx;
     lastChunkZ = cz;
 
-
-    const required = [];
-
+    /*
+        Generate surrounding chunks.
+    */
 
     for (
-        let x = -LOAD_RADIUS;
-        x <= LOAD_RADIUS;
+        let x = cx - LOAD_RADIUS;
+        x <= cx + LOAD_RADIUS;
         x++
     ) {
 
         for (
-            let z = -LOAD_RADIUS;
-            z <= LOAD_RADIUS;
+            let z = cz - LOAD_RADIUS;
+            z <= cz + LOAD_RADIUS;
             z++
         ) {
 
-            required.push({
-                cx: cx + x,
-                cz: cz + z,
-                distance:
-                    Math.abs(x) +
-                    Math.abs(z)
-            });
+            generateChunk(
+                x,
+                z
+            );
         }
     }
 
-
-    required.sort(
-        (a, b) =>
-            a.distance -
-            b.distance
-    );
-
+    /*
+        Unload distant chunks.
+    */
 
     for (
-        const item of required
+        const [key, chunk]
+        of chunks
     ) {
 
-        generateChunk(
-            item.cx,
-            item.cz
-        );
+        const dx =
+            chunk.userData.cx -
+            cx;
+
+        const dz =
+            chunk.userData.cz -
+            cz;
+
+        if (
+            Math.abs(dx) >
+                UNLOAD_RADIUS ||
+            Math.abs(dz) >
+                UNLOAD_RADIUS
+        ) {
+
+            unloadChunk(
+                chunk.userData.cx,
+                chunk.userData.cz
+            );
+        }
     }
-
-
-    unloadFarChunks(
-        cx,
-        cz
-    );
 }
 
+/* =========================================================
+   SURFACE HEIGHT
+========================================================= */
+
+function getSurfaceHeight(
+    x,
+    z
+) {
+
+    const terrain =
+        terrainHeight(
+            x,
+            z
+        );
+
+    const road =
+        getRoadAt(
+            x,
+            z
+        );
+
+    if (road) {
+
+        return terrain +
+            ROAD_LIFT;
+    }
+
+    return terrain;
+}
 
 /* =========================================================
    CAR
 ========================================================= */
 
-let carRoot =
+let carRoot = null;
+
+let carLoadedFromGLB = false;
+
+const carGroup =
     new THREE.Group();
 
-scene.add(
-    carRoot
-);
+scene.add(carGroup);
 
-let carModel = null;
+const CAR_MODEL_PATHS = [
 
-let carLoaded = false;
-
-let carSpeed = 0;
-
-let steering = 0;
-
-let targetSteering = 0;
-
-let nightMode = false;
-
-const keys = {};
-
-
-/* =========================================================
-   FALLBACK CAR
-========================================================= */
+    "./assets/car.glb",
+    "./assets/golden-hour-coastal-supercar.glb",
+    "./assets/golden-hour-coastal-supercar/GG.glb"
+];
 
 function createFallbackCar() {
 
-    const root =
+    const car =
         new THREE.Group();
-
 
     const bodyMaterial =
         new THREE.MeshStandardMaterial({
-            color: 0xb66c35,
-            metalness: .55,
-            roughness: .25
+            color: 0xd98a38,
+            metalness: 0.75,
+            roughness: 0.25
         });
-
 
     const darkMaterial =
         new THREE.MeshStandardMaterial({
-            color: 0x171b20,
-            metalness: .4,
-            roughness: .2
+            color: 0x111317,
+            metalness: 0.5,
+            roughness: 0.3
         });
-
 
     const body =
         new THREE.Mesh(
             new THREE.BoxGeometry(
-                2.25,
-                .55,
+                2.4,
+                0.48,
                 4.8
             ),
             bodyMaterial
         );
 
-
     body.position.y =
-        .65;
+        0.65;
 
+    body.castShadow = true;
 
-    body.castShadow =
-        true;
+    car.add(body);
 
-
-    root.add(
-        body
-    );
-
-
-    const roof =
+    const cabin =
         new THREE.Mesh(
             new THREE.BoxGeometry(
-                1.7,
-                .5,
-                2.1
+                1.75,
+                0.55,
+                2
             ),
             darkMaterial
         );
 
-
-    roof.position.set(
+    cabin.position.set(
         0,
         1.02,
-        .15
+        -0.15
     );
 
+    cabin.castShadow = true;
 
-    root.add(
-        roof
-    );
-
+    car.add(cabin);
 
     const wheelGeometry =
         new THREE.CylinderGeometry(
-            .4,
-            .4,
-            .28,
+            0.42,
+            0.42,
+            0.28,
             16
         );
-
 
     for (
         const x of [-1.05, 1.05]
@@ -4176,316 +3010,270 @@ function createFallbackCar() {
                     darkMaterial
                 );
 
-
             wheel.rotation.z =
                 Math.PI / 2;
 
-
             wheel.position.set(
                 x,
-                .4,
+                0.42,
                 z
             );
 
+            wheel.castShadow = true;
 
-            wheel.castShadow =
+            car.add(wheel);
+        }
+    }
+
+    return car;
+}
+
+async function loadCar() {
+
+    setLoading(
+        "LOADING GOLDEN HOUR SUPERCAR...",
+        60
+    );
+
+    for (
+        const path of CAR_MODEL_PATHS
+    ) {
+
+        try {
+
+            const gltf =
+                await loader.loadAsync(path);
+
+            carRoot =
+                gltf.scene;
+
+            carLoadedFromGLB =
                 true;
 
+            carRoot.traverse(
+                obj => {
 
-            root.add(
-                wheel
+                    if (
+                        obj.isMesh
+                    ) {
+
+                        obj.castShadow = true;
+                        obj.receiveShadow = true;
+                    }
+                }
+            );
+
+            /*
+                Normalize the model.
+            */
+
+            const box =
+                new THREE.Box3()
+                    .setFromObject(
+                        carRoot
+                    );
+
+            const size =
+                new THREE.Vector3();
+
+            box.getSize(size);
+
+            const maxSize =
+                Math.max(
+                    size.x,
+                    size.y,
+                    size.z
+                );
+
+            if (
+                maxSize > 0
+            ) {
+
+                carRoot.scale.setScalar(
+                    5.0 / maxSize
+                );
+            }
+
+            /*
+                Recalculate after scale.
+            */
+
+            const scaledBox =
+                new THREE.Box3()
+                    .setFromObject(
+                        carRoot
+                    );
+
+            carRoot.position.y -=
+                scaledBox.min.y;
+
+            carGroup.add(
+                carRoot
+            );
+
+            document.getElementById(
+                "carStatus"
+            ).textContent =
+                "GOLDEN HOUR COASTAL SUPERCAR";
+
+            console.log(
+                "REAL CAR MODEL LOADED:",
+                path
+            );
+
+            return;
+
+        } catch (error) {
+
+            console.warn(
+                "Car model failed:",
+                path
             );
         }
     }
 
+    /*
+        Only reaches here if every path failed.
+    */
 
-    return root;
+    console.warn(
+        "REAL CAR MODEL NOT FOUND. USING FALLBACK."
+    );
+
+    carRoot =
+        createFallbackCar();
+
+    carGroup.add(
+        carRoot
+    );
+
+    document.getElementById(
+        "carStatus"
+    ).textContent =
+        "CAR MODEL NOT FOUND — FALLBACK";
+
 }
-
 
 /* =========================================================
    HEADLIGHTS
 ========================================================= */
 
-const headlights = [];
-
-
-function createHeadlights() {
-
-    for (
-        const x of [-.72, .72]
-    ) {
-
-        const mesh =
-            new THREE.Mesh(
-                new THREE.SphereGeometry(
-                    .11,
-                    8,
-                    8
-                ),
-                new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    emissive: 0xffffff,
-                    emissiveIntensity: 4
-                })
-            );
-
-
-        mesh.position.set(
-            x,
-            .72,
-            -2.25
-        );
-
-
-        carRoot.add(
-            mesh
-        );
-
-
-        const light =
-            new THREE.SpotLight(
-                0xddeeff,
-                nightMode ? 4 : 0,
-                45,
-                .3,
-                .55,
-                1.2
-            );
-
-
-        light.position.set(
-            x,
-            .75,
-            -2.2
-        );
-
-
-        const target =
-            new THREE.Object3D();
-
-
-        target.position.set(
-            x,
-            .55,
-            -14
-        );
-
-
-        carRoot.add(
-            target
-        );
-
-
-        light.target =
-            target;
-
-
-        carRoot.add(
-            light
-        );
-
-
-        headlights.push(
-            light
-        );
-    }
-}
-
-
-function updateHeadlights() {
-
-    for (
-        const light of headlights
-    ) {
-
-        light.intensity =
-            nightMode
-                ? 4
-                : 0;
-    }
-}
-
-
-/* =========================================================
-   LOAD CAR
-========================================================= */
-
-async function loadCar() {
-
-    try {
-
-        const gltf =
-            await gltfLoader.loadAsync(
-                "./assets/golden-hour-coastal-supercar.glb"
-            );
-
-
-        carModel =
-            gltf.scene;
-
-
-        carModel.updateMatrixWorld(
-            true
-        );
-
-
-        const box =
-            new THREE.Box3()
-            .setFromObject(
-                carModel
-            );
-
-
-        const size =
-            box.getSize(
-                new THREE.Vector3()
-            );
-
-
-        const largest =
-            Math.max(
-                size.x,
-                size.y,
-                size.z
-            );
-
-
-        carModel.scale.setScalar(
-            5.2 /
-            Math.max(
-                largest,
-                .001
-            )
-        );
-
-
-        carModel.updateMatrixWorld(
-            true
-        );
-
-
-        const correctedBox =
-            new THREE.Box3()
-            .setFromObject(
-                carModel
-            );
-
-
-        carModel.position.y -=
-            correctedBox.min.y;
-
-
-        carModel.rotation.y =
-            Math.PI / 2;
-
-
-        carModel.traverse(
-            child => {
-
-                if (
-                    child.isMesh
-                ) {
-
-                    child.castShadow =
-                        true;
-
-                    child.receiveShadow =
-                        true;
-                }
-            }
-        );
-
-
-        carRoot.add(
-            carModel
-        );
-
-
-    } catch (error) {
-
-        console.warn(
-            "Car model failed. Using fallback.",
-            error
-        );
-
-
-        carModel =
-            createFallbackCar();
-
-
-        carRoot.add(
-            carModel
-        );
-    }
-
-
-    carLoaded = true;
-
-
-    createHeadlights();
-
-
-    positionCar();
-}
-
-
-/* =========================================================
-   CAR POSITION
-========================================================= */
-
-function positionCar() {
-
-    carRoot.position.set(
+const leftHeadlight =
+    new THREE.SpotLight(
+        0xffffff,
         0,
-        getSurfaceHeight(
-            0,
-            40
-        ) +
-        CAR_GROUND_OFFSET,
-        40
+        100,
+        Math.PI / 7,
+        0.5,
+        1
     );
 
-
-    carRoot.rotation.set(
+const rightHeadlight =
+    new THREE.SpotLight(
+        0xffffff,
         0,
-        0,
-        0
+        100,
+        Math.PI / 7,
+        0.5,
+        1
     );
-}
 
+leftHeadlight.position.set(
+    -0.65,
+    1.15,
+    -2
+);
+
+rightHeadlight.position.set(
+    0.65,
+    1.15,
+    -2
+);
+
+const leftTarget =
+    new THREE.Object3D();
+
+const rightTarget =
+    new THREE.Object3D();
+
+leftTarget.position.set(
+    -0.65,
+    0.5,
+    -30
+);
+
+rightTarget.position.set(
+    0.65,
+    0.5,
+    -30
+);
+
+carGroup.add(
+    leftHeadlight,
+    rightHeadlight,
+    leftTarget,
+    rightTarget
+);
+
+leftHeadlight.target =
+    leftTarget;
+
+rightHeadlight.target =
+    rightTarget;
 
 /* =========================================================
-   INPUT
+   CAR PHYSICS
 ========================================================= */
+
+const keys = {};
+
+let speed = 0;
+
+let steering = 0;
+
+const MAX_SPEED =
+    1.55;
+
+const REVERSE_SPEED =
+    -0.65;
+
+const ACCELERATION =
+    0.035;
+
+const BRAKE_FORCE =
+    0.075;
+
+const DRAG =
+    0.012;
+
+const STEERING_SPEED =
+    0.055;
 
 window.addEventListener(
     "keydown",
     event => {
 
-        keys[event.code] =
-            true;
-
+        keys[
+            event.key.toLowerCase()
+        ] = true;
 
         if (
             [
-                "ArrowUp",
-                "ArrowDown",
-                "ArrowLeft",
-                "ArrowRight",
-                "Space"
+                "arrowup",
+                "arrowdown",
+                "arrowleft",
+                "arrowright",
+                " "
             ].includes(
-                event.code
+                event.key.toLowerCase()
             )
         ) {
 
             event.preventDefault();
         }
 
-
         if (
-            event.code === "KeyN" &&
-            !event.repeat
+            event.key.toLowerCase() === "n"
         ) {
 
             toggleNight();
@@ -4493,16 +3281,15 @@ window.addEventListener(
     }
 );
 
-
 window.addEventListener(
     "keyup",
     event => {
 
-        keys[event.code] =
-            false;
+        keys[
+            event.key.toLowerCase()
+        ] = false;
     }
 );
-
 
 window.addEventListener(
     "blur",
@@ -4510,362 +3297,320 @@ window.addEventListener(
 
         for (
             const key in keys
-        ) {
-
+        )
             keys[key] = false;
-        }
     }
 );
-
-
-/* =========================================================
-   NIGHT
-========================================================= */
-
-function toggleNight() {
-
-    nightMode =
-        !nightMode;
-
-
-    if (
-        nightMode
-    ) {
-
-        scene.background =
-            new THREE.Color(
-                0x07101d
-            );
-
-        scene.fog.color =
-            new THREE.Color(
-                0x07101d
-            );
-
-        hemiLight.intensity =
-            .35;
-
-        sun.intensity =
-            .35;
-
-        ambientLight.intensity =
-            .12;
-
-        starMaterial.opacity =
-            .85;
-
-        document.getElementById(
-            "nightIndicator"
-        ).textContent =
-            "NIGHT";
-
-    } else {
-
-        scene.background =
-            new THREE.Color(
-                0x91b7dc
-            );
-
-        scene.fog.color =
-            new THREE.Color(
-                0x91b7dc
-            );
-
-        hemiLight.intensity =
-            1.8;
-
-        sun.intensity =
-            3.2;
-
-        ambientLight.intensity =
-            .22;
-
-        starMaterial.opacity =
-            0;
-
-        document.getElementById(
-            "nightIndicator"
-        ).textContent =
-            "DAY";
-    }
-
-
-    updateHeadlights();
-}
-
 
 /* =========================================================
    BUILDING COLLISION
 ========================================================= */
 
-function carHitsBuilding(
+function collidesWithBuildings(
     x,
     z
 ) {
 
     const cx =
         Math.floor(
-            x /
-            CHUNK_SIZE
+            x / CHUNK_SIZE
         );
-
 
     const cz =
         Math.floor(
-            z /
-            CHUNK_SIZE
+            z / CHUNK_SIZE
         );
 
-
     for (
-        let dx = -1;
-        dx <= 1;
-        dx++
+        let ox = -1;
+        ox <= 1;
+        ox++
     ) {
 
         for (
-            let dz = -1;
-            dz <= 1;
-            dz++
+            let oz = -1;
+            oz <= 1;
+            oz++
         ) {
 
             const chunk =
                 chunks.get(
-                    `${cx + dx},${cz + dz}`
+                    `${cx + ox},${cz + oz}`
                 );
 
-
-            if (!chunk) {
+            if (!chunk)
                 continue;
-            }
-
 
             const lots =
-                chunk.group
-                    .userData
-                    .buildingLots ||
+                chunk.userData.buildingLots ||
                 [];
-
 
             for (
                 const lot of lots
             ) {
 
-                const distance =
-                    Math.hypot(
-                        x - lot.x,
-                        z - lot.z
-                    );
+                const dx =
+                    x - lot.x;
 
+                const dz =
+                    z - lot.z;
+
+                const distance =
+                    Math.sqrt(
+                        dx * dx +
+                        dz * dz
+                    );
 
                 if (
                     distance <
-                    lot.radius +
-                    2.2
-                ) {
-
+                    lot.radius + 2.5
+                )
                     return true;
-                }
             }
         }
     }
 
-
     return false;
 }
 
-
 /* =========================================================
-   CAR PHYSICS
+   CAR UPDATE
 ========================================================= */
 
 function updateCar() {
 
     if (
-        !carLoaded
-    ) {
-
+        !worldReady
+    )
         return;
-    }
 
+    const accelerating =
+        keys["w"] ||
+        keys["arrowup"];
 
-    const forward =
-        keys["KeyW"] ||
-        keys["ArrowUp"];
+    const reversing =
+        keys["s"] ||
+        keys["arrowdown"];
 
+    const braking =
+        keys[" "];
 
-    const reverse =
-        keys["KeyS"] ||
-        keys["ArrowDown"];
+    const turningLeft =
+        keys["a"] ||
+        keys["arrowleft"];
 
-
-    const brake =
-        keys["Space"];
-
+    const turningRight =
+        keys["d"] ||
+        keys["arrowright"];
 
     if (
-        forward
+        accelerating
     ) {
 
-        carSpeed += .018;
+        speed +=
+            ACCELERATION;
 
     } else if (
-        reverse
+        reversing
     ) {
 
-        carSpeed -= .014;
+        speed -=
+            ACCELERATION * 0.75;
 
     } else {
 
-        carSpeed *= .975;
-    }
+        if (
+            speed > 0
+        ) {
 
+            speed -= DRAG;
+
+            if (
+                speed < 0
+            )
+                speed = 0;
+
+        } else if (
+            speed < 0
+        ) {
+
+            speed += DRAG;
+
+            if (
+                speed > 0
+            )
+                speed = 0;
+        }
+    }
 
     if (
-        brake
+        braking
     ) {
 
-        carSpeed *= .90;
+        if (
+            speed > 0
+        )
+            speed -= BRAKE_FORCE;
+
+        else if (
+            speed < 0
+        )
+            speed += BRAKE_FORCE;
     }
 
-
-    carSpeed =
+    speed =
         THREE.MathUtils.clamp(
-            carSpeed,
-            -.42,
-            1.05
+            speed,
+            REVERSE_SPEED,
+            MAX_SPEED
         );
 
-
-    targetSteering = 0;
-
+    let targetSteering = 0;
 
     if (
-        keys["KeyA"] ||
-        keys["ArrowLeft"]
-    ) {
-
-        targetSteering = -1;
-
-    } else if (
-        keys["KeyD"] ||
-        keys["ArrowRight"]
-    ) {
-
+        turningLeft
+    )
         targetSteering = 1;
-    }
 
+    if (
+        turningRight
+    )
+        targetSteering = -1;
 
     steering =
         THREE.MathUtils.lerp(
             steering,
             targetSteering,
-            .14
+            0.12
         );
 
+    /*
+        Steering becomes stronger at speed.
+    */
 
-    const speedFactor =
-        THREE.MathUtils.clamp(
-            Math.abs(
-                carSpeed
-            ),
-            0,
+    const steeringStrength =
+        Math.min(
+            Math.abs(speed) / MAX_SPEED,
             1
         );
 
-
-    carRoot.rotation.y -=
+    carGroup.rotation.y +=
         steering *
-        .032 *
-        speedFactor *
-        Math.sign(
-            carSpeed ||
-            1
-        );
+        STEERING_SPEED *
+        steeringStrength *
+        (speed >= 0 ? 1 : -1);
 
-
-    const direction =
+    const forward =
         new THREE.Vector3(
             0,
             0,
             -1
         );
 
-
-    direction.applyQuaternion(
-        carRoot.quaternion
+    forward.applyQuaternion(
+        carGroup.quaternion
     );
 
-
     const oldX =
-        carRoot.position.x;
+        carGroup.position.x;
 
     const oldZ =
-        carRoot.position.z;
+        carGroup.position.z;
 
+    carGroup.position.x +=
+        forward.x *
+        speed;
 
-    carRoot.position.x +=
-        direction.x *
-        carSpeed;
+    carGroup.position.z +=
+        forward.z *
+        speed;
 
-
-    carRoot.position.z +=
-        direction.z *
-        carSpeed;
-
+    /*
+        Prevent driving through buildings.
+    */
 
     if (
-        carHitsBuilding(
-            carRoot.position.x,
-            carRoot.position.z
+        collidesWithBuildings(
+            carGroup.position.x,
+            carGroup.position.z
         )
     ) {
 
-        carRoot.position.x =
+        carGroup.position.x =
             oldX;
 
-        carRoot.position.z =
+        carGroup.position.z =
             oldZ;
 
-        carSpeed *=
-            -.18;
+        speed *= -0.15;
     }
 
+    /*
+        Stream world BEFORE placing car on surface.
+    */
 
-    const ground =
+    updateWorldStreaming(
+        carGroup.position.x,
+        carGroup.position.z
+    );
+
+    carGroup.position.y =
         getSurfaceHeight(
-            carRoot.position.x,
-            carRoot.position.z
+            carGroup.position.x,
+            carGroup.position.z
+        ) +
+        0.08;
+
+    /*
+        Small visual suspension movement.
+    */
+
+    const suspension =
+        Math.sin(
+            performance.now() * 0.018
+        ) *
+        Math.min(
+            Math.abs(speed) * 0.025,
+            0.035
         );
 
+    carGroup.position.y +=
+        suspension;
 
-    carRoot.position.y =
-        THREE.MathUtils.lerp(
-            carRoot.position.y,
-            ground +
-            CAR_GROUND_OFFSET,
-            .3
+    /*
+        HUD.
+    */
+
+    document.getElementById(
+        "speed"
+    ).textContent =
+        Math.round(
+            Math.abs(speed) * 115
         );
 
-
-    carRoot.rotation.z =
-        THREE.MathUtils.lerp(
-            carRoot.rotation.z,
-            -steering *
-            .025 *
-            speedFactor,
-            .12
+    const cx =
+        Math.floor(
+            carGroup.position.x /
+            CHUNK_SIZE
         );
 
-
-    carRoot.rotation.x =
-        THREE.MathUtils.lerp(
-            carRoot.rotation.x,
-            0,
-            .12
+    const cz =
+        Math.floor(
+            carGroup.position.z /
+            CHUNK_SIZE
         );
+
+    const biome =
+        getBiome(
+            carGroup.position.x,
+            carGroup.position.z
+        );
+
+    document.getElementById(
+        "location"
+    ).textContent =
+        `${biome.toUpperCase()}  •  SECTOR ${cx}:${cz}`;
 }
-
 
 /* =========================================================
    CAMERA
@@ -4874,274 +3619,329 @@ function updateCar() {
 const cameraTarget =
     new THREE.Vector3();
 
-
 function updateCamera() {
 
-    if (
-        !carLoaded
-    ) {
-
+    if (!carRoot)
         return;
-    }
 
-
-    const offset =
+    const desired =
         new THREE.Vector3(
             0,
-            4.8,
+            5.4,
             11
         );
 
-
-    offset.applyQuaternion(
-        carRoot.quaternion
+    desired.applyQuaternion(
+        carGroup.quaternion
     );
 
-
-    const desired =
-        carRoot.position
-            .clone()
-            .add(
-                offset
-            );
-
+    desired.add(
+        carGroup.position
+    );
 
     camera.position.lerp(
         desired,
-        .085
+        0.075
     );
-
 
     cameraTarget.copy(
-        carRoot.position
+        carGroup.position
     );
 
-
-    cameraTarget.y +=
-        1.4;
-
+    cameraTarget.y += 1.0;
 
     camera.lookAt(
         cameraTarget
     );
 }
 
-
 /* =========================================================
-   HUD
+   DAY / NIGHT
 ========================================================= */
 
-let hudCounter = 0;
+let night = false;
 
+function toggleNight() {
 
-function updateHUD() {
+    night = !night;
 
-    hudCounter++;
+    if (night) {
 
+        scene.background =
+            new THREE.Color(
+                0x07101c
+            );
 
-    if (
-        hudCounter < 8
-    ) {
+        scene.fog.color =
+            new THREE.Color(
+                0x07101c
+            );
 
-        return;
+        hemi.intensity =
+            0.35;
+
+        sun.intensity =
+            0.35;
+
+        ambient.intensity =
+            0.1;
+
+        leftHeadlight.intensity =
+            3.5;
+
+        rightHeadlight.intensity =
+            3.5;
+
+        document.getElementById(
+            "carStatus"
+        ).textContent =
+            "GOLDEN HOUR COASTAL SUPERCAR • NIGHT";
+
+    } else {
+
+        scene.background =
+            new THREE.Color(
+                0x8fb4d9
+            );
+
+        scene.fog.color =
+            new THREE.Color(
+                0x8fb4d9
+            );
+
+        hemi.intensity =
+            1.35;
+
+        sun.intensity =
+            2.4;
+
+        ambient.intensity =
+            0.25;
+
+        leftHeadlight.intensity =
+            0;
+
+        rightHeadlight.intensity =
+            0;
+
+        document.getElementById(
+            "carStatus"
+        ).textContent =
+            "GOLDEN HOUR COASTAL SUPERCAR";
     }
-
-
-    hudCounter = 0;
-
-
-    const speed =
-        Math.round(
-            Math.abs(
-                carSpeed
-            ) * 52
-        );
-
-
-    document.getElementById(
-        "speed"
-    ).textContent =
-        speed;
-
-
-    const cx =
-        Math.floor(
-            carRoot.position.x /
-            CHUNK_SIZE
-        );
-
-
-    const cz =
-        Math.floor(
-            carRoot.position.z /
-            CHUNK_SIZE
-        );
-
-
-    const biome =
-        getBiome(
-            carRoot.position.x,
-            carRoot.position.z
-        );
-
-
-    document.getElementById(
-        "worldInfo"
-    ).textContent =
-        `${biome.toUpperCase()} • SECTOR ${cx}, ${cz}`;
 }
 
-
 /* =========================================================
-   STARTUP
+   INITIAL WORLD
 ========================================================= */
 
-async function startGame() {
+function nextFrame() {
 
-    const fill =
-        document.getElementById(
-            "loadingFill"
-        );
+    return new Promise(
+        resolve =>
+            requestAnimationFrame(
+                resolve
+            )
+    );
+}
 
+async function buildInitialWorld() {
 
-    fill.style.width =
-        "15%";
+    setLoading(
+        "BUILDING HORIZON...",
+        70
+    );
 
+    /*
+        Generate in rings so the browser doesn't freeze.
+    */
 
-    await loadBuildings();
+    const radius =
+        LOAD_RADIUS;
 
-
-    fill.style.width =
-        "45%";
-
-
-    await loadCar();
-
-
-    fill.style.width =
-        "60%";
-
-
-    worldReady = false;
-
-
-    const initialChunks = [];
-
+    const positions = [];
 
     for (
-        let x = -LOAD_RADIUS;
-        x <= LOAD_RADIUS;
-        x++
+        let ring = 0;
+        ring <= radius;
+        ring++
     ) {
 
         for (
-            let z = -LOAD_RADIUS;
-            z <= LOAD_RADIUS;
+            let x = -ring;
+            x <= ring;
+            x++
+        ) {
+
+            positions.push([
+                x,
+                -ring
+            ]);
+
+            if (
+                ring !== 0
+            )
+                positions.push([
+                    x,
+                    ring
+                ]);
+        }
+
+        for (
+            let z = -ring + 1;
+            z < ring;
             z++
         ) {
 
-            initialChunks.push({
-                cx: x,
-                cz: z,
-                distance:
-                    Math.abs(x) +
-                    Math.abs(z)
-            });
+            positions.push([
+                -ring,
+                z
+            ]);
+
+            if (
+                ring !== 0
+            )
+                positions.push([
+                    ring,
+                    z
+                ]);
         }
     }
 
+    const unique =
+        new Map();
 
-    initialChunks.sort(
-        (a, b) =>
-            a.distance -
-            b.distance
-    );
+    for (
+        const [x, z]
+        of positions
+    ) {
 
+        unique.set(
+            `${x},${z}`,
+            [x, z]
+        );
+    }
+
+    const list =
+        [...unique.values()];
 
     for (
         let i = 0;
-        i < initialChunks.length;
+        i < list.length;
         i++
     ) {
 
-        const item =
-            initialChunks[i];
-
+        const [x, z] =
+            list[i];
 
         generateChunk(
-            item.cx,
-            item.cz
+            x,
+            z
         );
 
+        setLoading(
+            "BUILDING WORLD...",
+            70 +
+            (i / list.length) * 22
+        );
 
-        fill.style.width =
-            (
-                60 +
-                (i /
-                initialChunks.length) *
-                35
-            ) + "%";
-
+        /*
+            Give browser time between chunks.
+        */
 
         if (
             i % 2 === 0
-        ) {
-
-            await new Promise(
-                resolve =>
-                    requestAnimationFrame(
-                        resolve
-                    )
-            );
-        }
+        )
+            await nextFrame();
     }
+}
 
+/* =========================================================
+   START
+========================================================= */
 
-    lastChunkX = 0;
-    lastChunkZ = 0;
+async function start() {
 
+    setLoading(
+        "STARTING HORIZON...",
+        5
+    );
+
+    await Promise.all([
+        loadBuildings(),
+        loadCar()
+    ]);
+
+    setLoading(
+        "GENERATING OPEN WORLD...",
+        70
+    );
+
+    await buildInitialWorld();
+
+    /*
+        Spawn near the center on a road.
+    */
+
+    carGroup.position.set(
+        0,
+        getSurfaceHeight(
+            0,
+            40
+        ) + 0.08,
+        40
+    );
+
+    /*
+        Face down the road.
+    */
+
+    carGroup.rotation.y =
+        Math.PI;
+
+    updateWorldStreaming(
+        carGroup.position.x,
+        carGroup.position.z,
+        true
+    );
 
     worldReady = true;
 
-
-    fill.style.width =
-        "100%";
-
+    setLoading(
+        "HORIZON READY",
+        100
+    );
 
     await new Promise(
         resolve =>
             setTimeout(
                 resolve,
-                350
+                500
             )
     );
-
 
     const loading =
         document.getElementById(
             "loading"
         );
 
-
-    loading.style.opacity =
-        "0";
-
+    loading.style.opacity = "0";
 
     setTimeout(
         () => {
-
             loading.style.display =
                 "none";
-
         },
-        850
+        650
     );
 }
-
 
 /* =========================================================
    ANIMATION
 ========================================================= */
+
+const clock =
+    new THREE.Clock();
 
 function animate() {
 
@@ -5149,32 +3949,24 @@ function animate() {
         animate
     );
 
+    const dt =
+        Math.min(
+            clock.getDelta(),
+            0.05
+        );
+
+    worldTime +=
+        dt * 0.003;
 
     updateCar();
 
     updateCamera();
-
-    updateWorldStreaming();
-
-    updateHUD();
-
-
-    if (
-        carLoaded
-    ) {
-
-        stars.position.copy(
-            carRoot.position
-        );
-    }
-
 
     renderer.render(
         scene,
         camera
     );
 }
-
 
 /* =========================================================
    RESIZE
@@ -5185,36 +3977,39 @@ window.addEventListener(
     () => {
 
         camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
-
+            innerWidth /
+            innerHeight;
 
         camera.updateProjectionMatrix();
 
-
         renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-
-
-        renderer.setPixelRatio(
-            Math.min(
-                window.devicePixelRatio,
-                1.5
-            )
+            innerWidth,
+            innerHeight
         );
     }
 );
 
-
 /* =========================================================
-   GO
+   START EVERYTHING
 ========================================================= */
 
-startGame();
-
 animate();
+
+start().catch(
+    error => {
+
+        console.error(
+            "HORIZON STARTUP ERROR:",
+            error
+        );
+
+        document.getElementById(
+            "loadStatus"
+        ).textContent =
+            "WORLD ERROR — CHECK CONSOLE";
+
+    }
+);
 
 </script>
 
