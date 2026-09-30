@@ -191,7 +191,6 @@ const camera =
         3000
     );
 
-
 camera.position.set(
     0,
     5,
@@ -205,12 +204,10 @@ const renderer =
         powerPreference: "high-performance"
     });
 
-
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
 );
-
 
 renderer.setPixelRatio(
     Math.min(
@@ -218,7 +215,6 @@ renderer.setPixelRatio(
         1.7
     )
 );
-
 
 renderer.shadowMap.enabled = true;
 
@@ -233,7 +229,6 @@ renderer.toneMapping =
 
 renderer.toneMappingExposure =
     1.15;
-
 
 document.body.appendChild(
     renderer.domElement
@@ -251,7 +246,6 @@ const hemisphere =
         1.6
     );
 
-
 scene.add(
     hemisphere
 );
@@ -263,13 +257,11 @@ const sun =
         2.5
     );
 
-
 sun.position.set(
     300,
     600,
     200
 );
-
 
 sun.castShadow = true;
 
@@ -283,7 +275,6 @@ sun.shadow.camera.bottom = -500;
 
 sun.shadow.camera.near = 10;
 sun.shadow.camera.far = 1800;
-
 
 scene.add(
     sun
@@ -301,16 +292,13 @@ const loader =
 const draco =
     new DRACOLoader();
 
-
 draco.setDecoderPath(
     "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/"
 );
 
-
 loader.setDRACOLoader(
     draco
 );
-
 
 loader.setMeshoptDecoder(
     MeshoptDecoder
@@ -423,7 +411,6 @@ function smoothNoise(
             u
         );
 
-
     const bottom =
         THREE.MathUtils.lerp(
             c,
@@ -494,13 +481,10 @@ function getBiome(
         );
 
 
-    /*
-       Dense central city.
-    */
-
     if (
         distance < 650
     ) {
+
         return "city";
     }
 
@@ -515,6 +499,7 @@ function getBiome(
     if (
         noise > 0.72
     ) {
+
         return "mountain";
     }
 
@@ -522,6 +507,7 @@ function getBiome(
     if (
         noise < 0.25
     ) {
+
         return "coast";
     }
 
@@ -591,35 +577,9 @@ const yellowLineMaterial =
     });
 
 
-const curbMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0xaaa9a5,
-        roughness: 1
-    });
-
-
 /* =========================================================
    ROAD SYSTEM
 ========================================================= */
-
-/*
-   IMPORTANT:
-
-   Roads are defined entirely from WORLD coordinates.
-
-   They do NOT depend on the chunk they are generated in.
-
-   Therefore:
-
-   Chunk 0,0
-          |
-   Chunk 0,1
-
-   will always agree about where the road is.
-
-   This is what makes the road network infinite.
-*/
-
 
 function getRoadAt(
     x,
@@ -633,15 +593,16 @@ function getRoadAt(
         );
 
 
-    /* -----------------------------------------------------
-       CENTRAL CITY
-    ----------------------------------------------------- */
+    /*
+       CITY ROADS
+    */
 
     if (
         distance < 850
     ) {
 
         const majorSpacing = 240;
+
 
         const majorX =
             Math.abs(
@@ -735,9 +696,9 @@ function getRoadAt(
     }
 
 
-    /* -----------------------------------------------------
-       INFINITE HIGHWAYS
-    ----------------------------------------------------- */
+    /*
+       HIGHWAYS
+    */
 
     const highwaySpacing =
         480;
@@ -792,7 +753,7 @@ function getRoadAt(
 
 
 /* =========================================================
-   CHECK ROAD CENTER
+   ROAD CENTER CHECKS
 ========================================================= */
 
 function roadExistsOnX(
@@ -810,6 +771,7 @@ function roadExistsOnX(
             z - major
         ) < 13
     ) {
+
         return {
             width: 26,
             type: "major"
@@ -830,9 +792,7 @@ function roadExistsOnX(
     ) {
 
         if (
-            Math.sqrt(
-                city * city
-            ) < 850
+            Math.abs(city) < 850
         ) {
 
             return {
@@ -846,7 +806,8 @@ function roadExistsOnX(
     const highway =
         Math.round(
             z / 480
-        ) * 480;
+        ) * 480
+    ;
 
 
     if (
@@ -902,9 +863,7 @@ function roadExistsOnZ(
     ) {
 
         if (
-            Math.sqrt(
-                city * city
-            ) < 850
+            Math.abs(city) < 850
         ) {
 
             return {
@@ -918,7 +877,8 @@ function roadExistsOnZ(
     const highway =
         Math.round(
             x / 480
-        ) * 480;
+        ) * 480
+    ;
 
 
     if (
@@ -1031,6 +991,7 @@ function createTerrainChunk(
     if (
         biome === "countryside"
     ) {
+
         material =
             countrysideMaterial;
     }
@@ -1039,6 +1000,7 @@ function createTerrainChunk(
     if (
         biome === "mountain"
     ) {
+
         material =
             mountainMaterial;
     }
@@ -1047,6 +1009,7 @@ function createTerrainChunk(
     if (
         biome === "coast"
     ) {
+
         material =
             sandMaterial;
     }
@@ -1085,15 +1048,12 @@ function createRoadSurface(
 ) {
 
     /*
-       FIXED ROAD SYSTEM
+       The road geometry uses WORLD coordinates.
 
-       The old version generated geometry around 0,0
-       while storing the intended world position separately.
-
-       This version creates local geometry and explicitly
-       positions the mesh in world space.
+       This is important because all chunks are kept at
+       the origin. The terrain itself also uses world
+       coordinates inside its geometry.
     */
-
 
     const geometry =
         new THREE.PlaneGeometry(
@@ -1132,11 +1092,28 @@ function createRoadSurface(
             positions.getZ(i);
 
 
+        /*
+           Convert local road coordinates
+           into actual world coordinates.
+        */
+
         const wx =
             centerX + lx;
 
         const wz =
             centerZ + lz;
+
+
+        positions.setX(
+            i,
+            wx
+        );
+
+
+        positions.setZ(
+            i,
+            wz
+        );
 
 
         positions.setY(
@@ -1160,13 +1137,6 @@ function createRoadSurface(
         );
 
 
-    mesh.position.set(
-        0,
-        0,
-        0
-    );
-
-
     mesh.receiveShadow = true;
 
 
@@ -1180,7 +1150,7 @@ function createRoadSurface(
 
 
 /* =========================================================
-   ROAD MARKINGS
+   ROAD LINE
 ========================================================= */
 
 function addRoadLine(
@@ -1242,7 +1212,8 @@ function addRoadLine(
         terrainHeight(
             x,
             z
-        ) + 0.29,
+        ) +
+        0.29,
         z
     );
 
@@ -1273,15 +1244,9 @@ function addDashedLine(
 
 
     for (
-        let p =
-            -length / 2;
-
-        p <
-            length / 2;
-
-        p +=
-            dashLength +
-            gapLength
+        let p = -length / 2;
+        p < length / 2;
+        p += dashLength + gapLength
     ) {
 
         let x =
@@ -1336,7 +1301,8 @@ function addDashedLine(
             terrainHeight(
                 x,
                 z
-            ) + 0.31,
+            ) +
+            0.31,
             z
         );
 
@@ -1424,7 +1390,8 @@ function createSidewalk(
             terrainHeight(
                 x,
                 z
-            ) + 0.25,
+            ) +
+            0.25,
             z
         );
 
@@ -1468,10 +1435,6 @@ function createRoad(
         0.8;
 
 
-    /*
-       Major highways get edge lines.
-    */
-
     addRoadLine(
         group,
         centerX,
@@ -1496,10 +1459,6 @@ function createRoad(
     );
 
 
-    /*
-       Major roads have double yellow center markings.
-    */
-
     if (
         type === "major" ||
         type === "highway"
@@ -1507,12 +1466,14 @@ function createRoad(
 
         addDashedLine(
             group,
-            centerX - (
+            centerX -
+            (
                 axis === "z"
                     ? 0.55
                     : 0
             ),
-            centerZ - (
+            centerZ -
+            (
                 axis === "x"
                     ? 0.55
                     : 0
@@ -1526,12 +1487,14 @@ function createRoad(
 
         addDashedLine(
             group,
-            centerX + (
+            centerX +
+            (
                 axis === "z"
                     ? 0.55
                     : 0
             ),
-            centerZ + (
+            centerZ +
+            (
                 axis === "x"
                     ? 0.55
                     : 0
@@ -1543,10 +1506,6 @@ function createRoad(
         );
     }
 
-
-    /*
-       City roads get a single center line.
-    */
 
     if (
         type === "city"
@@ -1602,9 +1561,7 @@ function generateRoads(
 
 
     /*
-       Horizontal roads.
-
-       These are roads whose direction is X.
+       HORIZONTAL ROADS
     */
 
     const firstHorizontal =
@@ -1614,11 +1571,8 @@ function generateRoads(
 
 
     for (
-        let z =
-            firstHorizontal;
-
+        let z = firstHorizontal;
         z <= maxZ + 80;
-
         z += 80
     ) {
 
@@ -1636,10 +1590,8 @@ function generateRoads(
 
 
         if (
-            z <
-                minZ - 80 ||
-            z >
-                maxZ + 80
+            z < minZ - 80 ||
+            z > maxZ + 80
         ) {
             continue;
         }
@@ -1648,7 +1600,7 @@ function generateRoads(
         createRoad(
             group,
             minX +
-                CHUNK_SIZE / 2,
+            CHUNK_SIZE / 2,
             z,
             "x",
             info.width,
@@ -1659,9 +1611,7 @@ function generateRoads(
 
 
     /*
-       Vertical roads.
-
-       These are roads whose direction is Z.
+       VERTICAL ROADS
     */
 
     const firstVertical =
@@ -1671,11 +1621,8 @@ function generateRoads(
 
 
     for (
-        let x =
-            firstVertical;
-
+        let x = firstVertical;
         x <= maxX + 80;
-
         x += 80
     ) {
 
@@ -1693,10 +1640,8 @@ function generateRoads(
 
 
         if (
-            x <
-                minX - 80 ||
-            x >
-                maxX + 80
+            x < minX - 80 ||
+            x > maxX + 80
         ) {
             continue;
         }
@@ -1706,7 +1651,7 @@ function generateRoads(
             group,
             x,
             minZ +
-                CHUNK_SIZE / 2,
+            CHUNK_SIZE / 2,
             "z",
             info.width,
             CHUNK_SIZE + 40,
@@ -1723,13 +1668,9 @@ function generateRoads(
 const buildingFiles = [
 
     "large-building.glb",
-
     "store.glb",
-
     "apartment.glb",
-
     "large-building-2.glb",
-
     "bank.glb"
 
 ];
@@ -1747,8 +1688,7 @@ let buildingsReady = false;
 async function loadBuildings() {
 
     for (
-        const file
-        of buildingFiles
+        const file of buildingFiles
     ) {
 
         try {
@@ -1831,18 +1771,14 @@ async function loadBuildings() {
 
 
             if (
-                file.includes(
-                    "large"
-                )
+                file.includes("large")
             ) {
 
                 targetHeight =
                     28;
 
             } else if (
-                file.includes(
-                    "apartment"
-                )
+                file.includes("apartment")
             ) {
 
                 targetHeight =
@@ -1878,15 +1814,9 @@ async function loadBuildings() {
             buildingTemplates.push({
 
                 model: root,
-
-                width:
-                    scaledWidth,
-
-                depth:
-                    scaledDepth,
-
-                height:
-                    scaledHeight
+                width: scaledWidth,
+                depth: scaledDepth,
+                height: scaledHeight
 
             });
 
@@ -1924,40 +1854,27 @@ function buildingTouchesRoad(
 
     const projectedX =
         halfX *
-            Math.abs(
-                Math.cos(
-                    rotation
-                )
-            ) +
+        Math.abs(
+            Math.cos(rotation)
+        ) +
 
         halfZ *
-            Math.abs(
-                Math.sin(
-                    rotation
-                )
-            );
+        Math.abs(
+            Math.sin(rotation)
+        );
 
 
     const projectedZ =
         halfX *
-            Math.abs(
-                Math.sin(
-                    rotation
-                )
-            ) +
+        Math.abs(
+            Math.sin(rotation)
+        ) +
 
         halfZ *
-            Math.abs(
-                Math.cos(
-                    rotation
-                )
-            );
+        Math.abs(
+            Math.cos(rotation)
+        );
 
-
-    /*
-       Test the actual road network
-       around the building.
-    */
 
     const sample =
         15;
@@ -1994,9 +1911,7 @@ function buildingTouchesRoad(
             ) {
 
                 if (
-                    Math.abs(
-                        z + dz
-                    ) <
+                    Math.abs(z + dz) <
                     road.width / 2 +
                     projectedZ +
                     3
@@ -2008,9 +1923,7 @@ function buildingTouchesRoad(
             } else {
 
                 if (
-                    Math.abs(
-                        x + dx
-                    ) <
+                    Math.abs(x + dx) <
                     road.width / 2 +
                     projectedX +
                     3
@@ -2072,7 +1985,7 @@ function addBuilding(
 
 
 /* =========================================================
-   GENERATE CITY BUILDINGS
+   GENERATE BUILDINGS
 ========================================================= */
 
 function generateBuildings(
@@ -2085,6 +1998,7 @@ function generateBuildings(
         !buildingsReady ||
         buildingTemplates.length === 0
     ) {
+
         return;
     }
 
@@ -2106,11 +2020,6 @@ function generateBuildings(
         );
 
 
-    /*
-       Buildings mainly belong
-       in city areas.
-    */
-
     let count =
         biome === "city"
             ? 9
@@ -2120,6 +2029,7 @@ function generateBuildings(
     if (
         biome === "mountain"
     ) {
+
         count = 0;
     }
 
@@ -2182,15 +2092,10 @@ function generateBuildings(
 
 
         const rotations = [
-
             0,
-
             Math.PI / 2,
-
             Math.PI,
-
             Math.PI * 1.5
-
         ];
 
 
@@ -2374,6 +2279,7 @@ function generateTrees(
     if (
         biome === "mountain"
     ) {
+
         amount = 12;
     }
 
@@ -2416,23 +2322,16 @@ function generateTrees(
             );
 
 
-        /*
-           Keep trees away from roads.
-        */
-
         if (
             getRoadAt(
                 x,
                 z
             )
         ) {
+
             continue;
         }
 
-
-        /*
-           Keep city trees somewhat sparse.
-        */
 
         if (
             biome === "city" &&
@@ -2613,6 +2512,7 @@ function generateWater(
     if (
         coast < 1.55
     ) {
+
         return;
     }
 
@@ -2677,6 +2577,7 @@ function generateChunk(
     if (
         chunks.has(key)
     ) {
+
         return;
     }
 
@@ -2687,7 +2588,6 @@ function generateChunk(
 
     group.userData.cx =
         cx;
-
 
     group.userData.cz =
         cz;
@@ -2789,11 +2689,6 @@ function disposeGroup(
 
                 object.geometry.dispose();
             }
-
-            /*
-               Shared materials are intentionally
-               kept alive.
-            */
         }
     );
 }
@@ -2846,9 +2741,9 @@ function unloadFarChunks(
 
         if (
             dx >
-                UNLOAD_RADIUS ||
+            UNLOAD_RADIUS ||
             dz >
-                UNLOAD_RADIUS
+            UNLOAD_RADIUS
         ) {
 
             scene.remove(
@@ -2916,14 +2811,9 @@ function updateWorldStreaming() {
     lastChunkX =
         cx;
 
-
     lastChunkZ =
         cz;
 
-
-    /*
-       Generate nearest chunks first.
-    */
 
     const required = [];
 
@@ -2965,8 +2855,7 @@ function updateWorldStreaming() {
 
 
     for (
-        const chunk
-        of required
+        const chunk of required
     ) {
 
         generateChunk(
@@ -3119,19 +3008,29 @@ async function loadCar() {
 
 
         /*
-           Start directly on the
-           major north/south road.
+           Start on the major road.
+
+           The root is lifted above the terrain so the
+           bottom of the car does not spawn underneath
+           the road surface.
         */
 
-        carRoot.position.set(
-            0,
-            terrainHeight(
-                0,
-                40
-            ),
-            40
-        );
+        const startX =
+            0;
 
+        const startZ =
+            40;
+
+
+        carRoot.position.set(
+            startX,
+            terrainHeight(
+                startX,
+                startZ
+            ) +
+            0.55,
+            startZ
+        );
 
     }
 
@@ -3197,34 +3096,26 @@ let steering = 0;
 const MAX_SPEED =
     0.75;
 
-
 const MAX_REVERSE =
     0.28;
-
 
 const ACCELERATION =
     0.008;
 
-
 const REVERSE_ACCELERATION =
     0.005;
-
 
 const BRAKE_POWER =
     0.035;
 
-
 const FRICTION =
     0.006;
-
 
 const MAX_STEERING =
     0.55;
 
-
 const STEERING_RESPONSE =
     0.14;
-
 
 const TURN_RATE =
     0.035;
@@ -3239,6 +3130,7 @@ function updateCar() {
     if (
         !carLoaded
     ) {
+
         return;
     }
 
@@ -3417,10 +3309,15 @@ function updateCar() {
         );
 
 
+    /*
+       Keep the car above the terrain/road.
+    */
+
     carRoot.position.y =
         THREE.MathUtils.lerp(
             carRoot.position.y,
-            ground,
+            ground +
+            0.55,
             0.25
         );
 
@@ -3570,21 +3467,21 @@ function toggleNight() {
 async function startGame() {
 
     /*
-       Load buildings first.
+       BUILDINGS
     */
 
     await loadBuildings();
 
 
     /*
-       Load car.
+       CAR
     */
 
     await loadCar();
 
 
     /*
-       Build initial world.
+       INITIAL WORLD
     */
 
     for (
@@ -3610,13 +3507,12 @@ async function startGame() {
     lastChunkX =
         0;
 
-
     lastChunkZ =
         0;
 
 
     /*
-       Hide loading.
+       HIDE LOADING SCREEN
     */
 
     const loading =
@@ -3654,9 +3550,7 @@ function animate() {
 
     updateCar();
 
-
     updateWorldStreaming();
-
 
     updateCamera();
 
