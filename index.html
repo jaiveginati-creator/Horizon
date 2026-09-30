@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Horizon</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -33,116 +35,167 @@ canvas {
     position: absolute;
     top: 24px;
     left: 28px;
+
     font-size: 25px;
     font-weight: 700;
+
     letter-spacing: 5px;
 }
 
 #version {
     margin-top: 4px;
+
     font-size: 10px;
     letter-spacing: 3px;
+
     opacity: 0.6;
 }
 
 #status {
     position: absolute;
+
     top: 27px;
     right: 28px;
+
     font-size: 10px;
     letter-spacing: 2px;
+
     opacity: 0.65;
 }
 
 #speedBox {
     position: absolute;
+
     right: 28px;
     bottom: 28px;
+
     text-align: right;
 }
 
 #speed {
     font-size: 48px;
     font-weight: 700;
+
     line-height: 1;
 }
 
 #kmh {
     font-size: 11px;
     letter-spacing: 3px;
+
     opacity: 0.65;
 }
 
 #controls {
     position: absolute;
+
     left: 28px;
     bottom: 28px;
+
     font-size: 11px;
     line-height: 1.8;
+
     letter-spacing: 1px;
+
     opacity: 0.7;
 }
 
 #loading {
     position: fixed;
+
     inset: 0;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
+
     background: #000;
+
     z-index: 50;
+
     font-size: 13px;
+
     letter-spacing: 4px;
 }
 
-#message {
-    position: fixed;
-    left: 50%;
-    bottom: 12%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    letter-spacing: 2px;
-    opacity: 0;
-}
 </style>
 
+
 <script type="importmap">
+
 {
     "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
+        "three":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+        "three/addons/":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
     }
 }
+
 </script>
+
 </head>
+
 
 <body>
 
-<div id="loading">LOADING HORIZON</div>
+
+<div id="loading">
+    LOADING HORIZON
+</div>
+
 
 <div id="hud">
 
     <div id="title">
+
         HORIZON
-        <div id="version">V3.2.1 • CITY POLISH</div>
+
+        <div id="version">
+            V3.2.1 • CITY POLISH
+        </div>
+
     </div>
 
-    <div id="status">WORLD ONLINE</div>
+
+    <div id="status">
+        WORLD ONLINE
+    </div>
+
 
     <div id="controls">
+
         W / ↑ &nbsp; ACCELERATE<br>
+
         S / ↓ &nbsp; BRAKE / REVERSE<br>
+
         A / ← &nbsp; STEER LEFT<br>
+
         D / → &nbsp; STEER RIGHT<br>
+
         N &nbsp; DAY / NIGHT
+
     </div>
 
+
     <div id="speedBox">
-        <div id="speed">0</div>
-        <div id="kmh">KM/H</div>
+
+        <div id="speed">
+            0
+        </div>
+
+        <div id="kmh">
+            KM/H
+        </div>
+
     </div>
 
 </div>
+
 
 
 <script type="module">
@@ -163,14 +216,18 @@ import {
 
 
 // ============================================================
-// SETUP
+// THREE.JS SETUP
 // ============================================================
 
 const scene =
     new THREE.Scene();
 
+
 scene.background =
-    new THREE.Color(0x8bb8d8);
+    new THREE.Color(
+        0x8bb8d8
+    );
+
 
 scene.fog =
     new THREE.Fog(
@@ -179,6 +236,10 @@ scene.fog =
         2100
     );
 
+
+// ============================================================
+// CAMERA
+// ============================================================
 
 const camera =
     new THREE.PerspectiveCamera(
@@ -189,6 +250,7 @@ const camera =
         3000
     );
 
+
 camera.position.set(
     0,
     5,
@@ -196,17 +258,26 @@ camera.position.set(
 );
 
 
+// ============================================================
+// RENDERER
+// ============================================================
+
 const renderer =
     new THREE.WebGLRenderer({
+
         antialias: true,
+
         powerPreference:
             "high-performance"
+
     });
+
 
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
 );
+
 
 renderer.setPixelRatio(
     Math.min(
@@ -215,19 +286,26 @@ renderer.setPixelRatio(
     )
 );
 
-renderer.shadowMap.enabled = true;
+
+renderer.shadowMap.enabled =
+    true;
+
 
 renderer.shadowMap.type =
     THREE.PCFSoftShadowMap;
 
+
 renderer.outputColorSpace =
     THREE.SRGBColorSpace;
+
 
 renderer.toneMapping =
     THREE.ACESFilmicToneMapping;
 
+
 renderer.toneMappingExposure =
     1.15;
+
 
 document.body.appendChild(
     renderer.domElement
@@ -241,16 +319,20 @@ document.body.appendChild(
 const loader =
     new GLTFLoader();
 
+
 const dracoLoader =
     new DRACOLoader();
+
 
 dracoLoader.setDecoderPath(
     "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/"
 );
 
+
 loader.setDRACOLoader(
     dracoLoader
 );
+
 
 loader.setMeshoptDecoder(
     MeshoptDecoder
@@ -258,61 +340,107 @@ loader.setMeshoptDecoder(
 
 
 // ============================================================
-// WORLD
+// WORLD SETTINGS
 // ============================================================
 
-const WORLD_SIZE = 2400;
+const WORLD_SIZE =
+    2400;
 
 
 // ============================================================
 // TERRAIN
 // ============================================================
 
-function terrainHeight(x, z) {
+function terrainHeight(
+    x,
+    z
+) {
 
     const hills =
-        Math.sin(x * 0.008) * 3 +
-        Math.cos(z * 0.006) * 4 +
+
+        Math.sin(
+            x * 0.008
+        ) * 3
+
+        +
+
+        Math.cos(
+            z * 0.006
+        ) * 4
+
+        +
+
         Math.sin(
             (x + z) * 0.012
         ) * 2;
 
-    const smallHills =
+
+    const smallerHills =
+
         Math.sin(
             x * 0.022 +
             z * 0.013
-        ) * 0.8 +
-        Math.cos(z * 0.018) * 0.7;
+        ) * 0.8
+
+        +
+
+        Math.cos(
+            z * 0.018
+        ) * 0.7;
+
 
     const cityFlatten =
         Math.exp(
-            -(x * x + z * z) /
-            180000
+            -(
+                x * x +
+                z * z
+            ) / 180000
         );
 
+
     return (
-        (hills + smallHills) *
-        (1 - cityFlatten * 0.85)
+
+        hills +
+        smallerHills
+
+    ) *
+
+    (
+
+        1 -
+        cityFlatten *
+        0.85
+
     );
 }
 
+
+// ============================================================
+// TERRAIN MESH
+// ============================================================
 
 function createTerrain() {
 
     const geometry =
         new THREE.PlaneGeometry(
+
             WORLD_SIZE,
             WORLD_SIZE,
+
             140,
             140
+
         );
+
 
     geometry.rotateX(
         -Math.PI / 2
     );
 
+
     const position =
         geometry.attributes.position;
+
 
     for (
         let i = 0;
@@ -323,8 +451,10 @@ function createTerrain() {
         const x =
             position.getX(i);
 
+
         const z =
             position.getZ(i);
+
 
         position.setY(
             i,
@@ -335,13 +465,19 @@ function createTerrain() {
         );
     }
 
+
     geometry.computeVertexNormals();
+
 
     const material =
         new THREE.MeshStandardMaterial({
+
             color: 0x405b3d,
+
             roughness: 1
+
         });
+
 
     const terrain =
         new THREE.Mesh(
@@ -349,10 +485,16 @@ function createTerrain() {
             material
         );
 
-    terrain.receiveShadow = true;
 
-    scene.add(terrain);
+    terrain.receiveShadow =
+        true;
+
+
+    scene.add(
+        terrain
+    );
 }
+
 
 createTerrain();
 
@@ -377,26 +519,39 @@ function createRoad(
             )
         );
 
+
     const geometry =
         new THREE.PlaneGeometry(
+
             width,
             length,
+
             1,
             segments
+
         );
+
 
     geometry.rotateX(
         -Math.PI / 2
     );
 
+
     const position =
         geometry.attributes.position;
 
+
     const cos =
-        Math.cos(rotation);
+        Math.cos(
+            rotation
+        );
+
 
     const sin =
-        Math.sin(rotation);
+        Math.sin(
+            rotation
+        );
+
 
     for (
         let i = 0;
@@ -407,45 +562,65 @@ function createRoad(
         const localX =
             position.getX(i);
 
+
         const localZ =
             position.getZ(i);
 
+
         const worldX =
+
             x +
+
             localX * cos -
+
             localZ * sin;
 
+
         const worldZ =
+
             z +
+
             localX * sin +
+
             localZ * cos;
+
 
         position.setX(
             i,
             worldX - x
         );
 
+
         position.setZ(
             i,
             worldZ - z
         );
 
+
         position.setY(
             i,
+
             terrainHeight(
                 worldX,
                 worldZ
             ) + 0.14
+
         );
     }
 
+
     geometry.computeVertexNormals();
+
 
     const material =
         new THREE.MeshStandardMaterial({
+
             color: 0x202124,
+
             roughness: 0.92
+
         });
+
 
     const road =
         new THREE.Mesh(
@@ -453,15 +628,22 @@ function createRoad(
             material
         );
 
+
     road.position.set(
         x,
         0,
         z
     );
 
-    road.receiveShadow = true;
 
-    scene.add(road);
+    road.receiveShadow =
+        true;
+
+
+    scene.add(
+        road
+    );
+
 
     createRoadMarkings(
         x,
@@ -474,7 +656,7 @@ function createRoad(
 
 
 // ============================================================
-// ROAD MARKINGS
+// ROAD POINT
 // ============================================================
 
 function roadPoint(
@@ -485,6 +667,7 @@ function roadPoint(
 ) {
 
     return {
+
         x:
             x +
             Math.sin(rotation) *
@@ -494,9 +677,14 @@ function roadPoint(
             z +
             Math.cos(rotation) *
             distance
+
     };
 }
 
+
+// ============================================================
+// ROAD MARKINGS
+// ============================================================
 
 function createRoadMarkings(
     x,
@@ -506,10 +694,13 @@ function createRoadMarkings(
     rotation
 ) {
 
-    // Center lines
+    // CENTER DASHES
+
     for (
         let d = -length / 2 + 12;
+
         d < length / 2;
+
         d += 22
     ) {
 
@@ -521,11 +712,13 @@ function createRoadMarkings(
                 rotation
             );
 
+
         const y =
             terrainHeight(
                 p.x,
                 p.z
             ) + 0.22;
+
 
         const geometry =
             new THREE.BoxGeometry(
@@ -534,11 +727,18 @@ function createRoadMarkings(
                 9
             );
 
+
         const material =
             new THREE.MeshStandardMaterial({
-                color: 0xe5dfba,
-                roughness: 0.8
+
+                color:
+                    0xe5dfba,
+
+                roughness:
+                    0.8
+
             });
+
 
         const dash =
             new THREE.Mesh(
@@ -546,30 +746,40 @@ function createRoadMarkings(
                 material
             );
 
+
         dash.position.set(
             p.x,
             y,
             p.z
         );
 
+
         dash.rotation.y =
             rotation;
 
-        scene.add(dash);
+
+        scene.add(
+            dash
+        );
     }
 
 
-    // Edge lines
+    // ROAD EDGES
+
     const edgeOffset =
         width / 2 - 0.7;
 
+
     for (
-        const side of [-1, 1]
+        const side
+        of [-1, 1]
     ) {
 
         for (
             let d = -length / 2;
+
             d < length / 2;
+
             d += 12
         ) {
 
@@ -581,23 +791,31 @@ function createRoadMarkings(
                     rotation
                 );
 
+
             const px =
+
                 p.x +
+
                 Math.cos(rotation) *
                 edgeOffset *
                 side;
 
+
             const pz =
+
                 p.z -
+
                 Math.sin(rotation) *
                 edgeOffset *
                 side;
+
 
             const y =
                 terrainHeight(
                     px,
                     pz
                 ) + 0.19;
+
 
             const geometry =
                 new THREE.BoxGeometry(
@@ -606,11 +824,18 @@ function createRoadMarkings(
                     10
                 );
 
+
             const material =
                 new THREE.MeshStandardMaterial({
-                    color: 0xc9c9c9,
-                    roughness: 0.9
+
+                    color:
+                        0xc9c9c9,
+
+                    roughness:
+                        0.9
+
                 });
+
 
             const edge =
                 new THREE.Mesh(
@@ -618,16 +843,21 @@ function createRoadMarkings(
                     material
                 );
 
+
             edge.position.set(
                 px,
                 y,
                 pz
             );
 
+
             edge.rotation.y =
                 rotation;
 
-            scene.add(edge);
+
+            scene.add(
+                edge
+            );
         }
     }
 }
@@ -645,6 +875,7 @@ createRoad(
     0
 );
 
+
 createRoad(
     0,
     0,
@@ -652,6 +883,7 @@ createRoad(
     1900,
     Math.PI / 2
 );
+
 
 createRoad(
     330,
@@ -661,6 +893,7 @@ createRoad(
     0
 );
 
+
 createRoad(
     -330,
     0,
@@ -669,6 +902,7 @@ createRoad(
     0
 );
 
+
 createRoad(
     0,
     360,
@@ -676,6 +910,7 @@ createRoad(
     1700,
     Math.PI / 2
 );
+
 
 createRoad(
     0,
@@ -687,7 +922,7 @@ createRoad(
 
 
 // ============================================================
-// CITY GRID
+// CITY STREET GRID
 // ============================================================
 
 for (
@@ -698,8 +933,11 @@ for (
 
     if (
         Math.abs(x) < 50
-    )
+    ) {
+
         continue;
+    }
+
 
     createRoad(
         x,
@@ -719,8 +957,11 @@ for (
 
     if (
         Math.abs(z) < 50
-    )
+    ) {
+
         continue;
+    }
+
 
     createRoad(
         0,
@@ -733,7 +974,7 @@ for (
 
 
 // ============================================================
-// INTERSECTION MARKINGS
+// CROSSWALKS
 // ============================================================
 
 function createCrosswalk(
@@ -751,15 +992,20 @@ function createCrosswalk(
         const offset =
             i * 2.1;
 
+
         const px =
             x +
+
             Math.cos(rotation) *
             offset;
 
+
         const pz =
             z -
+
             Math.sin(rotation) *
             offset;
+
 
         const geometry =
             new THREE.BoxGeometry(
@@ -768,10 +1014,15 @@ function createCrosswalk(
                 8
             );
 
+
         const material =
             new THREE.MeshStandardMaterial({
-                color: 0xe0e0e0
+
+                color:
+                    0xe0e0e0
+
             });
+
 
         const stripe =
             new THREE.Mesh(
@@ -779,41 +1030,60 @@ function createCrosswalk(
                 material
             );
 
+
         stripe.position.set(
+
             px,
+
             terrainHeight(
                 px,
                 pz
             ) + 0.24,
+
             pz
+
         );
+
 
         stripe.rotation.y =
             rotation;
 
-        scene.add(stripe);
+
+        scene.add(
+            stripe
+        );
     }
 }
 
 
 const intersections = [
+
     [105, 105],
     [105, -105],
+
     [-105, 105],
     [-105, -105],
+
     [210, 210],
     [210, -210],
+
     [-210, 210],
     [-210, -210],
+
     [315, 315],
     [315, -315],
+
     [-315, 315],
     [-315, -315]
+
 ];
 
 
 for (
-    const [x, z]
+    const [
+        x,
+        z
+    ]
     of intersections
 ) {
 
@@ -822,6 +1092,7 @@ for (
         z,
         0
     );
+
 
     createCrosswalk(
         x,
@@ -849,15 +1120,23 @@ function createParkingLot(
             depth
         );
 
+
     geometry.rotateX(
         -Math.PI / 2
     );
 
+
     const material =
         new THREE.MeshStandardMaterial({
-            color: 0x303235,
-            roughness: 0.95
+
+            color:
+                0x303235,
+
+            roughness:
+                0.95
+
         });
+
 
     const lot =
         new THREE.Mesh(
@@ -865,22 +1144,36 @@ function createParkingLot(
             material
         );
 
+
     lot.position.set(
+
         x,
-        terrainHeight(x, z) +
-        0.12,
+
+        terrainHeight(
+            x,
+            z
+        ) + 0.12,
+
         z
+
     );
+
 
     lot.rotation.y =
         rotation;
 
-    lot.receiveShadow = true;
 
-    scene.add(lot);
+    lot.receiveShadow =
+        true;
+
+
+    scene.add(
+        lot
+    );
 
 
     // Parking lines
+
     for (
         let i = -4;
         i <= 4;
@@ -894,10 +1187,15 @@ function createParkingLot(
                 depth - 8
             );
 
+
         const material =
             new THREE.MeshStandardMaterial({
-                color: 0xbdbdbd
+
+                color:
+                    0xbdbdbd
+
             });
+
 
         const line =
             new THREE.Mesh(
@@ -905,38 +1203,50 @@ function createParkingLot(
                 material
             );
 
+
         const localX =
             i * 5;
 
-        line.position.set(
+
+        const px =
             x +
+
             localX *
-            Math.cos(rotation),
+            Math.cos(rotation);
+
+
+        const pz =
+            z +
+
+            localX *
+            Math.sin(rotation);
+
+
+        line.position.set(
+
+            px,
 
             terrainHeight(
-                x +
-                localX *
-                Math.cos(rotation),
-
-                z +
-                localX *
-                Math.sin(rotation)
+                px,
+                pz
             ) + 0.18,
 
-            z +
-            localX *
-            Math.sin(rotation)
+            pz
+
         );
+
 
         line.rotation.y =
             rotation;
 
-        scene.add(line);
+
+        scene.add(
+            line
+        );
     }
 }
 
 
-// Parking spaces placed beside roads
 createParkingLot(
     65,
     65,
@@ -945,6 +1255,7 @@ createParkingLot(
     0
 );
 
+
 createParkingLot(
     -65,
     -65,
@@ -952,6 +1263,7 @@ createParkingLot(
     70,
     0
 );
+
 
 createParkingLot(
     275,
@@ -960,6 +1272,7 @@ createParkingLot(
     70,
     Math.PI / 2
 );
+
 
 createParkingLot(
     -275,
@@ -991,6 +1304,272 @@ const buildingFiles = [
 
 const buildingTemplates = [];
 
+const placedBuildings = [];
+
+
+// ============================================================
+// ROAD COLLISION
+// ============================================================
+
+function isBuildingOnRoad(
+    x,
+    z,
+    radius = 58
+) {
+
+    // MAIN HIGHWAYS
+
+    if (
+        Math.abs(x) <
+        15 + radius
+    ) {
+
+        return true;
+    }
+
+
+    if (
+        Math.abs(z) <
+        15 + radius
+    ) {
+
+        return true;
+    }
+
+
+    // MAJOR VERTICAL ROADS
+
+    if (
+        Math.abs(x - 330) <
+        10 + radius
+    ) {
+
+        return true;
+    }
+
+
+    if (
+        Math.abs(x + 330) <
+        10 + radius
+    ) {
+
+        return true;
+    }
+
+
+    // MAJOR HORIZONTAL ROADS
+
+    if (
+        Math.abs(z - 360) <
+        10 + radius
+    ) {
+
+        return true;
+    }
+
+
+    if (
+        Math.abs(z + 360) <
+        10 + radius
+    ) {
+
+        return true;
+    }
+
+
+    // CITY GRID
+
+    for (
+        let road = -420;
+
+        road <= 420;
+
+        road += 105
+    ) {
+
+        if (
+            Math.abs(road) < 50
+        ) {
+
+            continue;
+        }
+
+
+        // Vertical road
+
+        if (
+            Math.abs(x - road) <
+            4.5 + radius
+        ) {
+
+            return true;
+        }
+
+
+        // Horizontal road
+
+        if (
+            Math.abs(z - road) <
+            4.5 + radius
+        ) {
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+// ============================================================
+// BUILDING COLLISION
+// ============================================================
+
+function buildingTooClose(
+    x,
+    z,
+    radius
+) {
+
+    for (
+        const building
+        of placedBuildings
+    ) {
+
+        const dx =
+            x -
+            building.x;
+
+
+        const dz =
+            z -
+            building.z;
+
+
+        const distance =
+            Math.sqrt(
+
+                dx * dx +
+                dz * dz
+
+            );
+
+
+        if (
+            distance <
+            radius +
+            building.radius
+        ) {
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+// ============================================================
+// SOLID BUILDING CORE
+// ============================================================
+
+function addSolidBuildingCore(
+    building
+) {
+
+    const box =
+        new THREE.Box3()
+            .setFromObject(
+                building
+            );
+
+
+    const size =
+        new THREE.Vector3();
+
+
+    box.getSize(
+        size
+    );
+
+
+    const coreWidth =
+        Math.max(
+            1,
+            size.x * 0.72
+        );
+
+
+    const coreDepth =
+        Math.max(
+            1,
+            size.z * 0.72
+        );
+
+
+    const coreHeight =
+        Math.max(
+            2,
+            size.y * 0.92
+        );
+
+
+    const geometry =
+        new THREE.BoxGeometry(
+
+            coreWidth,
+            coreHeight,
+            coreDepth
+
+        );
+
+
+    const material =
+        new THREE.MeshStandardMaterial({
+
+            color:
+                0x24262a,
+
+            roughness:
+                0.95,
+
+            metalness:
+                0
+
+        });
+
+
+    const core =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    core.position.y =
+        coreHeight / 2 +
+        0.15;
+
+
+    core.castShadow =
+        true;
+
+
+    core.receiveShadow =
+        true;
+
+
+    building.add(
+        core
+    );
+}
+
+
+// ============================================================
+// LOAD BUILDINGS
+// ============================================================
 
 async function loadBuildings() {
 
@@ -1006,9 +1585,12 @@ async function loadBuildings() {
                     file
                 );
 
+
             const model =
                 gltf.scene;
 
+
+            // Normalize size
 
             const box =
                 new THREE.Box3()
@@ -1016,17 +1598,25 @@ async function loadBuildings() {
                         model
                     );
 
+
             const size =
                 new THREE.Vector3();
 
-            box.getSize(size);
+
+            box.getSize(
+                size
+            );
+
 
             const largest =
                 Math.max(
+
                     size.x,
                     size.y,
                     size.z
+
                 );
+
 
             if (
                 largest > 0
@@ -1038,15 +1628,46 @@ async function loadBuildings() {
             }
 
 
-            const finalBox =
+            // Center model
+
+            const centerBox =
                 new THREE.Box3()
                     .setFromObject(
                         model
                     );
 
-            model.position.y -=
-                finalBox.min.y;
 
+            const center =
+                new THREE.Vector3();
+
+
+            centerBox.getCenter(
+                center
+            );
+
+
+            model.position.x -=
+                center.x;
+
+
+            model.position.z -=
+                center.z;
+
+
+            // Ground model
+
+            const groundBox =
+                new THREE.Box3()
+                    .setFromObject(
+                        model
+                    );
+
+
+            model.position.y -=
+                groundBox.min.y;
+
+
+            // Materials
 
             model.traverse(
                 child => {
@@ -1061,12 +1682,14 @@ async function loadBuildings() {
                         child.receiveShadow =
                             true;
 
+
                         if (
                             child.material
                         ) {
 
                             child.material.side =
                                 THREE.DoubleSide;
+
 
                             child.material.roughness =
                                 0.82;
@@ -1076,104 +1699,155 @@ async function loadBuildings() {
             );
 
 
-            buildingTemplates.push(
+            // SOLID INTERIOR
+
+            addSolidBuildingCore(
                 model
             );
 
-        } catch (error) {
+
+            // Calculate actual footprint
+
+            const finalBox =
+                new THREE.Box3()
+                    .setFromObject(
+                        model
+                    );
+
+
+            const finalSize =
+                new THREE.Vector3();
+
+
+            finalBox.getSize(
+                finalSize
+            );
+
+
+            const footprintRadius =
+                Math.max(
+
+                    finalSize.x,
+                    finalSize.z
+
+                ) * 0.55;
+
+
+            buildingTemplates.push({
+
+                model:
+                    model,
+
+                radius:
+                    footprintRadius
+
+            });
+
+
+        } catch (
+            error
+        ) {
 
             console.warn(
-                "Could not load:",
-                file
+
+                "Could not load building:",
+                file,
+                error
+
             );
         }
     }
 
-    generateCity();
+
+    generateFinalCity();
 }
 
 
-function isRoadZone(
+// ============================================================
+// ADD BUILDING
+// ============================================================
+
+function addBuilding(
+    template,
     x,
-    z
+    z,
+    scale
 ) {
 
-    const clearance = 34;
+    const building =
+        template.model.clone(
+            true
+        );
 
 
-    // Main roads
-    if (
-        Math.abs(x) <
-        clearance
-    )
-        return true;
-
-    if (
-        Math.abs(z) <
-        clearance
-    )
-        return true;
+    building.scale.multiplyScalar(
+        scale
+    );
 
 
-    // Major vertical roads
-    if (
-        Math.abs(x - 330) <
-        clearance
-    )
-        return true;
-
-    if (
-        Math.abs(x + 330) <
-        clearance
-    )
-        return true;
+    building.rotation.y =
+        Math.random() *
+        Math.PI *
+        2;
 
 
-    // Major horizontal roads
-    if (
-        Math.abs(z - 360) <
-        clearance
-    )
-        return true;
+    building.position.set(
 
-    if (
-        Math.abs(z + 360) <
-        clearance
-    )
-        return true;
+        x,
 
+        terrainHeight(
+            x,
+            z
+        ),
 
-    // City roads
-    for (
-        let v = -420;
-        v <= 420;
-        v += 105
-    ) {
+        z
 
-        if (
-            Math.abs(v) < 50
-        )
-            continue;
-
-        if (
-            Math.abs(x - v) <
-            18
-        )
-            return true;
-
-        if (
-            Math.abs(z - v) <
-            18
-        )
-            return true;
-    }
+    );
 
 
-    return false;
+    building.traverse(
+        child => {
+
+            if (
+                child.isMesh
+            ) {
+
+                child.castShadow =
+                    true;
+
+                child.receiveShadow =
+                    true;
+            }
+        }
+    );
+
+
+    scene.add(
+        building
+    );
+
+
+    placedBuildings.push({
+
+        x:
+            x,
+
+        z:
+            z,
+
+        radius:
+            template.radius *
+            scale
+
+    });
 }
 
 
-function generateCity() {
+// ============================================================
+// FINAL CITY
+// ============================================================
+
+function generateFinalCity() {
 
     if (
         buildingTemplates.length === 0
@@ -1187,174 +1861,187 @@ function generateCity() {
     }
 
 
-    const occupied = [];
-
-
-    function tooClose(
-        x,
-        z,
-        distance
-    ) {
-
-        for (
-            const p
-            of occupied
-        ) {
-
-            const dx =
-                x - p.x;
-
-            const dz =
-                z - p.z;
-
-            if (
-                Math.sqrt(
-                    dx * dx +
-                    dz * dz
-                ) < distance
-            ) {
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
     // ========================================================
     // DOWNTOWN
     // ========================================================
 
     for (
-        let x = -400;
-        x <= 400;
+        let x = -455;
+
+        x <= 455;
+
         x += 70
     ) {
 
         for (
-            let z = -400;
-            z <= 400;
+            let z = -455;
+
+            z <= 455;
+
             z += 70
         ) {
 
-            if (
-                isRoadZone(
-                    x,
-                    z
-                )
-            )
-                continue;
-
-
-            // More buildings downtown
-            if (
-                Math.random() <
-                0.10
-            )
-                continue;
-
-
             const bx =
                 x +
+
                 (
                     Math.random() -
                     0.5
-                ) * 22;
+                ) * 18;
+
 
             const bz =
                 z +
+
                 (
                     Math.random() -
                     0.5
-                ) * 22;
+                ) * 18;
 
 
-            if (
-                isRoadZone(
-                    bx,
-                    bz
-                )
-            )
-                continue;
-
+            // HARD ROAD CHECK
 
             if (
-                tooClose(
+                isBuildingOnRoad(
                     bx,
                     bz,
-                    42
+                    58
                 )
-            )
-                continue;
+            ) {
 
+                continue;
+            }
+
+
+            // Parking lot clearance
+
+            if (
+
+                Math.abs(
+                    bx - 65
+                ) < 55 &&
+
+                Math.abs(
+                    bz - 65
+                ) < 65
+
+            ) {
+
+                continue;
+            }
+
+
+            if (
+
+                Math.abs(
+                    bx + 65
+                ) < 55 &&
+
+                Math.abs(
+                    bz + 65
+                ) < 65
+
+            ) {
+
+                continue;
+            }
+
+
+            if (
+
+                Math.abs(
+                    bx - 275
+                ) < 55 &&
+
+                Math.abs(
+                    bz - 275
+                ) < 65
+
+            ) {
+
+                continue;
+            }
+
+
+            if (
+
+                Math.abs(
+                    bx + 275
+                ) < 55 &&
+
+                Math.abs(
+                    bz + 275
+                ) < 65
+
+            ) {
+
+                continue;
+            }
+
+
+            // Choose model
 
             const template =
                 buildingTemplates[
+
                     Math.floor(
+
                         Math.random() *
                         buildingTemplates.length
+
                     )
+
                 ];
 
 
-            const building =
-                template.clone(true);
+            // Building size
 
-
-            // Downtown = larger buildings
             const scale =
-                0.75 +
-                Math.random() *
-                0.75;
+                0.72 +
 
-            building.scale.multiplyScalar(
+                Math.random() *
+                0.58;
+
+
+            const radius =
+                template.radius *
+                scale;
+
+
+            // ACTUAL FOOTPRINT ROAD CHECK
+
+            if (
+                isBuildingOnRoad(
+                    bx,
+                    bz,
+                    radius + 15
+                )
+            ) {
+
+                continue;
+            }
+
+
+            // Building collision
+
+            if (
+                buildingTooClose(
+                    bx,
+                    bz,
+                    radius + 8
+                )
+            ) {
+
+                continue;
+            }
+
+
+            addBuilding(
+                template,
+                bx,
+                bz,
                 scale
             );
-
-
-            building.rotation.y =
-                Math.random() *
-                Math.PI *
-                2;
-
-
-            building.position.set(
-                bx,
-                terrainHeight(
-                    bx,
-                    bz
-                ),
-                bz
-            );
-
-
-            building.traverse(
-                child => {
-
-                    if (
-                        child.isMesh
-                    ) {
-
-                        child.castShadow =
-                            true;
-
-                        child.receiveShadow =
-                            true;
-                    }
-                }
-            );
-
-
-            scene.add(
-                building
-            );
-
-
-            occupied.push({
-                x: bx,
-                z: bz
-            });
         }
     }
 
@@ -1365,7 +2052,9 @@ function generateCity() {
 
     for (
         let i = 0;
-        i < 100;
+
+        i < 120;
+
         i++
     ) {
 
@@ -1374,14 +2063,18 @@ function generateCity() {
             Math.PI *
             2;
 
+
         const distance =
-            480 +
+            500 +
+
             Math.random() *
             500;
+
 
         const x =
             Math.cos(angle) *
             distance;
+
 
         const z =
             Math.sin(angle) *
@@ -1389,94 +2082,78 @@ function generateCity() {
 
 
         if (
-            isRoadZone(
-                x,
-                z
-            )
-        )
-            continue;
-
-
-        if (
-            tooClose(
+            isBuildingOnRoad(
                 x,
                 z,
-                55
+                60
             )
-        )
+        ) {
+
             continue;
+        }
 
 
         const template =
             buildingTemplates[
+
                 Math.floor(
+
                     Math.random() *
                     buildingTemplates.length
+
                 )
+
             ];
-
-
-        const building =
-            template.clone(true);
 
 
         const scale =
             0.45 +
+
             Math.random() *
             0.45;
 
-        building.scale.multiplyScalar(
+
+        const radius =
+            template.radius *
+            scale;
+
+
+        if (
+            isBuildingOnRoad(
+                x,
+                z,
+                radius + 15
+            )
+        ) {
+
+            continue;
+        }
+
+
+        if (
+            buildingTooClose(
+                x,
+                z,
+                radius + 10
+            )
+        ) {
+
+            continue;
+        }
+
+
+        addBuilding(
+            template,
+            x,
+            z,
             scale
         );
-
-
-        building.rotation.y =
-            Math.random() *
-            Math.PI *
-            2;
-
-
-        building.position.set(
-            x,
-            terrainHeight(
-                x,
-                z
-            ),
-            z
-        );
-
-
-        building.traverse(
-            child => {
-
-                if (
-                    child.isMesh
-                ) {
-
-                    child.castShadow =
-                        true;
-
-                    child.receiveShadow =
-                        true;
-                }
-            }
-        );
-
-
-        scene.add(
-            building
-        );
-
-
-        occupied.push({
-            x,
-            z
-        });
     }
 }
 
 
-// Start building loading
+// Start building system
+
 loadBuildings();
 
 
@@ -1496,57 +2173,93 @@ function createTree(
 
     const trunk =
         new THREE.Mesh(
+
             new THREE.CylinderGeometry(
+
                 0.35 * scale,
                 0.5 * scale,
                 4 * scale,
                 8
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x5a3b27
+
+                color:
+                    0x5a3b27
+
             })
+
         );
+
 
     trunk.position.y =
         2 * scale;
 
-    trunk.castShadow = true;
 
-    group.add(trunk);
+    trunk.castShadow =
+        true;
+
+
+    group.add(
+        trunk
+    );
 
 
     const crown =
         new THREE.Mesh(
+
             new THREE.SphereGeometry(
+
                 2.4 * scale,
                 8,
                 8
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x315d35,
-                roughness: 1
+
+                color:
+                    0x315d35,
+
+                roughness:
+                    1
+
             })
+
         );
+
 
     crown.position.y =
         5 * scale;
 
-    crown.castShadow = true;
 
-    group.add(crown);
+    crown.castShadow =
+        true;
+
+
+    group.add(
+        crown
+    );
 
 
     group.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
         ),
+
         z
+
     );
 
 
-    scene.add(group);
+    scene.add(
+        group
+    );
 }
 
 
@@ -1556,7 +2269,9 @@ function createTree(
 
 for (
     let i = 0;
+
     i < 520;
+
     i++
 ) {
 
@@ -1566,6 +2281,7 @@ for (
             0.5
         ) * 2100;
 
+
     const z =
         (
             Math.random() -
@@ -1573,33 +2289,42 @@ for (
         ) * 2100;
 
 
-    // Don't place trees in city
+    // Keep away from downtown
+
     if (
+
         Math.abs(x) < 530 &&
+
         Math.abs(z) < 530
-    )
+
+    ) {
+
         continue;
+    }
 
 
-    // Keep trees away from roads
+    // Keep away from roads
+
     if (
-        isRoadZone(
+        isBuildingOnRoad(
             x,
-            z
+            z,
+            20
         )
-    )
+    ) {
+
         continue;
-
-
-    const scale =
-        0.7 +
-        Math.random() * 1.2;
+    }
 
 
     createTree(
+
         x,
         z,
-        scale
+
+        0.7 +
+        Math.random() * 1.2
+
     );
 }
 
@@ -1617,38 +2342,57 @@ function createMountain(
 
     const geometry =
         new THREE.ConeGeometry(
+
             radius,
             height,
             8
+
         );
+
 
     const material =
         new THREE.MeshStandardMaterial({
-            color: 0x4a5750,
-            roughness: 1
+
+            color:
+                0x4a5750,
+
+            roughness:
+                1
+
         });
+
 
     const mountain =
         new THREE.Mesh(
+
             geometry,
             material
+
         );
 
+
     mountain.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
         ) +
         height / 2,
+
         z
+
     );
+
 
     mountain.castShadow =
         true;
 
+
     mountain.receiveShadow =
         true;
+
 
     scene.add(
         mountain
@@ -1658,7 +2402,9 @@ function createMountain(
 
 for (
     let i = 0;
+
     i < 28;
+
     i++
 ) {
 
@@ -1667,61 +2413,90 @@ for (
         Math.PI *
         2;
 
+
     const distance =
         850 +
+
         Math.random() *
         350;
+
 
     const x =
         Math.cos(angle) *
         distance;
 
+
     const z =
         Math.sin(angle) *
         distance;
 
+
     createMountain(
+
         x,
         z,
+
         100 +
         Math.random() * 100,
+
         130 +
         Math.random() * 180
+
     );
 }
 
 
 // ============================================================
-// COASTLINE
+// WATER
 // ============================================================
 
 const waterGeometry =
     new THREE.PlaneGeometry(
+
         1200,
         430
+
     );
+
 
 const waterMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0x356f91,
-        roughness: 0.15,
-        metalness: 0.1
+
+        color:
+            0x356f91,
+
+        roughness:
+            0.15,
+
+        metalness:
+            0.1
+
     });
+
 
 const water =
     new THREE.Mesh(
+
         waterGeometry,
         waterMaterial
+
     );
+
 
 water.rotation.x =
     -Math.PI / 2;
 
+
 water.position.set(
+
     0,
+
     -0.4,
+
     -1140
+
 );
+
 
 scene.add(
     water
@@ -1729,35 +2504,53 @@ scene.add(
 
 
 // ============================================================
-// BEACH / COAST STRIP
+// BEACH
 // ============================================================
 
 const beachGeometry =
     new THREE.PlaneGeometry(
+
         1200,
         80
+
     );
+
 
 const beachMaterial =
     new THREE.MeshStandardMaterial({
-        color: 0xc5b486,
-        roughness: 1
+
+        color:
+            0xc5b486,
+
+        roughness:
+            1
+
     });
+
 
 const beach =
     new THREE.Mesh(
+
         beachGeometry,
         beachMaterial
+
     );
+
 
 beach.rotation.x =
     -Math.PI / 2;
 
+
 beach.position.set(
+
     0,
+
     -0.1,
+
     -920
+
 );
+
 
 scene.add(
     beach
@@ -1779,78 +2572,129 @@ function createStreetLight(
 
     const pole =
         new THREE.Mesh(
+
             new THREE.CylinderGeometry(
+
                 0.12,
                 0.16,
                 7,
                 8
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x292929,
-                roughness: 0.8
+
+                color:
+                    0x292929,
+
+                roughness:
+                    0.8
+
             })
+
         );
+
 
     pole.position.y =
         3.5;
 
+
     pole.castShadow =
         true;
 
-    group.add(pole);
+
+    group.add(
+        pole
+    );
 
 
     const arm =
         new THREE.Mesh(
+
             new THREE.BoxGeometry(
+
                 1.4,
                 0.12,
                 0.12
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x292929
+
+                color:
+                    0x292929
+
             })
+
         );
 
+
     arm.position.set(
+
         0.65,
         6.8,
         0
+
     );
 
-    group.add(arm);
+
+    group.add(
+        arm
+    );
 
 
     const lamp =
         new THREE.Mesh(
+
             new THREE.SphereGeometry(
+
                 0.35,
                 8,
                 8
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0xffe6aa,
-                emissive: 0xffb84d,
-                emissiveIntensity: 2
+
+                color:
+                    0xffe6aa,
+
+                emissive:
+                    0xffb84d,
+
+                emissiveIntensity:
+                    2
+
             })
+
         );
 
+
     lamp.position.set(
+
         1.25,
         6.65,
         0
+
     );
 
-    group.add(lamp);
+
+    group.add(
+        lamp
+    );
 
 
     group.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
         ),
+
         z
+
     );
 
 
@@ -1860,10 +2704,11 @@ function createStreetLight(
 }
 
 
-// Main roads
 for (
     let z = -850;
+
     z <= 850;
+
     z += 100
 ) {
 
@@ -1871,6 +2716,7 @@ for (
         18,
         z
     );
+
 
     createStreetLight(
         -18,
@@ -1880,7 +2726,7 @@ for (
 
 
 // ============================================================
-// INTERSECTION POLES
+// TRAFFIC LIGHT POLES
 // ============================================================
 
 function createTrafficPole(
@@ -1890,59 +2736,97 @@ function createTrafficPole(
 
     const pole =
         new THREE.Mesh(
+
             new THREE.CylinderGeometry(
+
                 0.09,
                 0.12,
                 4.5,
                 8
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x242424
+
+                color:
+                    0x242424
+
             })
+
         );
 
+
     pole.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
-        ) + 2.25,
+        ) +
+        2.25,
+
         z
+
     );
+
 
     pole.castShadow =
         true;
 
-    scene.add(pole);
+
+    scene.add(
+        pole
+    );
 
 
     const box =
         new THREE.Mesh(
+
             new THREE.BoxGeometry(
+
                 0.5,
                 1.4,
                 0.35
+
             ),
+
             new THREE.MeshStandardMaterial({
-                color: 0x161616
+
+                color:
+                    0x161616
+
             })
+
         );
 
+
     box.position.set(
+
         x,
+
         terrainHeight(
             x,
             z
-        ) + 4.3,
+        ) +
+        4.3,
+
         z
+
     );
 
-    scene.add(box);
+
+    scene.add(
+        box
+    );
 }
 
 
 for (
-    const [x, z]
+    const [
+        x,
+        z
+    ]
     of intersections
 ) {
 
@@ -1950,6 +2834,7 @@ for (
         x + 12,
         z + 12
     );
+
 
     createTrafficPole(
         x - 12,
@@ -1964,48 +2849,71 @@ for (
 
 const sun =
     new THREE.DirectionalLight(
+
         0xfff1d2,
+
         3.0
+
     );
 
+
 sun.position.set(
+
     400,
     650,
     250
+
 );
+
 
 sun.castShadow =
     true;
 
+
 sun.shadow.mapSize.width =
     2048;
+
 
 sun.shadow.mapSize.height =
     2048;
 
+
 sun.shadow.camera.left =
     -900;
+
 
 sun.shadow.camera.right =
     900;
 
+
 sun.shadow.camera.top =
     900;
+
 
 sun.shadow.camera.bottom =
     -900;
 
-scene.add(sun);
+
+scene.add(
+    sun
+);
 
 
 const ambient =
     new THREE.HemisphereLight(
+
         0xb9d7ee,
+
         0x35442e,
+
         1.8
+
     );
 
-scene.add(ambient);
+
+scene.add(
+    ambient
+);
 
 
 // ============================================================
@@ -2015,9 +2923,14 @@ scene.add(ambient);
 const car =
     new THREE.Group();
 
-scene.add(car);
 
-let carModel = null;
+scene.add(
+    car
+);
+
+
+let carModel =
+    null;
 
 
 const CAR_FILE =
@@ -2033,27 +2946,36 @@ async function loadCar() {
                 CAR_FILE
             );
 
+
         carModel =
             gltf.scene;
 
 
         // Scale
+
         const box =
             new THREE.Box3()
                 .setFromObject(
                     carModel
                 );
 
+
         const size =
             new THREE.Vector3();
 
-        box.getSize(size);
+
+        box.getSize(
+            size
+        );
+
 
         const largest =
             Math.max(
+
                 size.x,
                 size.y,
                 size.z
+
             );
 
 
@@ -2067,38 +2989,46 @@ async function loadCar() {
         }
 
 
-        // Center
+        // Center X/Z
+
         const centerBox =
             new THREE.Box3()
                 .setFromObject(
                     carModel
                 );
 
+
         const center =
             new THREE.Vector3();
+
 
         centerBox.getCenter(
             center
         );
 
+
         carModel.position.x -=
             center.x;
+
 
         carModel.position.z -=
             center.z;
 
 
-        // Rotate first
+        // Rotate BEFORE calculating bottom
+
         carModel.rotation.y =
             Math.PI / 2;
 
 
-        // Then calculate final bottom
+        // Put wheels on ground
+
         const finalBox =
             new THREE.Box3()
                 .setFromObject(
                     carModel
                 );
+
 
         carModel.position.y -=
             finalBox.min.y -
@@ -2128,12 +3058,16 @@ async function loadCar() {
 
 
         car.position.set(
+
             0,
+
             terrainHeight(
                 0,
                 80
             ),
+
             80
+
         );
 
 
@@ -2143,12 +3077,15 @@ async function loadCar() {
             "none";
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             "CAR ERROR:",
             error
         );
+
 
         document.getElementById(
             "loading"
@@ -2199,66 +3136,92 @@ window.addEventListener(
 
 
 // ============================================================
-// DRIVING
+// DRIVING SETTINGS
 // ============================================================
 
 const MAX_SPEED =
     0.75;
 
+
 const MAX_REVERSE =
     0.28;
+
 
 const ACCELERATION =
     0.008;
 
+
 const REVERSE_ACCELERATION =
     0.005;
+
 
 const BRAKE_POWER =
     0.035;
 
+
 const FRICTION =
     0.006;
+
 
 const MAX_STEERING =
     0.55;
 
+
 const STEERING_RESPONSE =
     0.14;
+
 
 const TURN_RATE =
     0.035;
 
 
-let speed = 0;
+let speed =
+    0;
 
-let steering = 0;
 
+let steering =
+    0;
+
+
+// ============================================================
+// CAR UPDATE
+// ============================================================
 
 function updateCar() {
 
     if (
         !carModel
-    )
+    ) {
+
         return;
+    }
 
 
     const accelerating =
+
         keys["w"] ||
         keys["arrowup"];
 
+
     const braking =
+
         keys["s"] ||
         keys["arrowdown"];
 
+
     const left =
+
         keys["a"] ||
         keys["arrowleft"];
 
+
     const right =
+
         keys["d"] ||
         keys["arrowright"];
 
+
+    // ACCELERATE
 
     if (
         accelerating
@@ -2272,8 +3235,12 @@ function updateCar() {
             speed +=
                 ACCELERATION;
         }
+    }
 
-    } else if (
+
+    // BRAKE / REVERSE
+
+    else if (
         braking
     ) {
 
@@ -2289,8 +3256,12 @@ function updateCar() {
             speed -=
                 REVERSE_ACCELERATION;
         }
+    }
 
-    } else {
+
+    // FRICTION
+
+    else {
 
         if (
             speed > 0
@@ -2299,7 +3270,9 @@ function updateCar() {
             speed -=
                 FRICTION;
 
-        } else if (
+        }
+
+        else if (
             speed < 0
         ) {
 
@@ -2311,34 +3284,49 @@ function updateCar() {
 
     speed =
         THREE.MathUtils.clamp(
+
             speed,
+
             -MAX_REVERSE,
+
             MAX_SPEED
+
         );
 
 
-    let targetSteering = 0;
+    // STEERING
+
+    let targetSteering =
+        0;
 
 
     if (
         left
-    )
+    ) {
+
         targetSteering =
             MAX_STEERING;
+    }
 
 
     if (
         right
-    )
+    ) {
+
         targetSteering =
             -MAX_STEERING;
+    }
 
 
     steering +=
+
         (
             targetSteering -
             steering
-        ) *
+        )
+
+        *
+
         STEERING_RESPONSE;
 
 
@@ -2348,8 +3336,10 @@ function updateCar() {
     ) {
 
         car.rotation.y +=
+
             steering *
             TURN_RATE *
+
             (
                 speed >= 0
                     ? 1
@@ -2358,11 +3348,15 @@ function updateCar() {
     }
 
 
+    // FORWARD VECTOR
+
     const forward =
         new THREE.Vector3(
+
             0,
             0,
             -1
+
         );
 
 
@@ -2379,12 +3373,17 @@ function updateCar() {
 
 
     // Terrain following
+
     car.position.y =
         terrainHeight(
+
             car.position.x,
             car.position.z
+
         );
 
+
+    // World boundary
 
     const limit =
         WORLD_SIZE / 2 -
@@ -2393,25 +3392,37 @@ function updateCar() {
 
     car.position.x =
         THREE.MathUtils.clamp(
+
             car.position.x,
+
             -limit,
             limit
+
         );
+
 
     car.position.z =
         THREE.MathUtils.clamp(
+
             car.position.z,
+
             -limit,
             limit
+
         );
 
+
+    // Speedometer
 
     document.getElementById(
         "speed"
     ).textContent =
+
         Math.round(
+
             Math.abs(speed) *
             55
+
         );
 }
 
@@ -2428,15 +3439,19 @@ function updateCamera() {
 
     if (
         !carModel
-    )
+    ) {
+
         return;
+    }
 
 
     const offset =
         new THREE.Vector3(
+
             0,
             4.2,
             10.5
+
         );
 
 
@@ -2447,18 +3462,24 @@ function updateCamera() {
 
     const desired =
         car.position.clone()
-            .add(offset);
+            .add(
+                offset
+            );
 
 
     camera.position.lerp(
+
         desired,
+
         0.075
+
     );
 
 
     cameraTarget.copy(
         car.position
     );
+
 
     cameraTarget.y +=
         1.3;
@@ -2474,7 +3495,8 @@ function updateCamera() {
 // DAY / NIGHT
 // ============================================================
 
-let night = false;
+let night =
+    false;
 
 
 function toggleNight() {
@@ -2492,16 +3514,20 @@ function toggleNight() {
                 0x07101c
             );
 
+
         scene.fog.color =
             new THREE.Color(
                 0x07101c
             );
 
+
         sun.intensity =
             0.35;
 
+
         ambient.intensity =
             0.55;
+
 
     } else {
 
@@ -2510,13 +3536,16 @@ function toggleNight() {
                 0x8bb8d8
             );
 
+
         scene.fog.color =
             new THREE.Color(
                 0x8bb8d8
             );
 
+
         sun.intensity =
             3.0;
+
 
         ambient.intensity =
             1.8;
@@ -2525,7 +3554,7 @@ function toggleNight() {
 
 
 // ============================================================
-// RESIZE
+// WINDOW RESIZE
 // ============================================================
 
 window.addEventListener(
@@ -2533,14 +3562,19 @@ window.addEventListener(
     () => {
 
         camera.aspect =
+
             window.innerWidth /
             window.innerHeight;
 
+
         camera.updateProjectionMatrix();
 
+
         renderer.setSize(
+
             window.innerWidth,
             window.innerHeight
+
         );
     }
 );
@@ -2556,9 +3590,12 @@ function animate() {
         animate
     );
 
+
     updateCar();
 
+
     updateCamera();
+
 
     renderer.render(
         scene,
