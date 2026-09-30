@@ -153,17 +153,14 @@ canvas {
 
 import * as THREE from "three";
 
-import {
-    GLTFLoader
-} from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader }
+    from "three/addons/loaders/GLTFLoader.js";
 
-import {
-    DRACOLoader
-} from "three/addons/loaders/DRACOLoader.js";
+import { DRACOLoader }
+    from "three/addons/loaders/DRACOLoader.js";
 
-import {
-    MeshoptDecoder
-} from "three/addons/libs/meshopt_decoder.module.js";
+import { MeshoptDecoder }
+    from "three/addons/libs/meshopt_decoder.module.js";
 
 
 /* =====================================================
@@ -226,7 +223,10 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 renderer.shadowMap.enabled = true;
@@ -305,8 +305,6 @@ const ground =
 ground.rotation.x =
     -Math.PI / 2;
 
-ground.position.y = 0;
-
 ground.receiveShadow = true;
 
 scene.add(ground);
@@ -331,7 +329,8 @@ const road =
 road.rotation.x =
     -Math.PI / 2;
 
-road.position.y = 0.012;
+road.position.y =
+    0.012;
 
 road.receiveShadow = true;
 
@@ -347,7 +346,6 @@ const edgeMaterial =
         color: 0x777b7d,
         roughness: 0.85
     });
-
 
 for (const x of [-8.2, 8.2]) {
 
@@ -382,7 +380,6 @@ const markingMaterial =
         color: 0xe4e1d4,
         roughness: 0.65
     });
-
 
 for (
     let z = -790;
@@ -549,7 +546,6 @@ for (
     if (Math.abs(z) < 45)
         continue;
 
-
     createBuilding(
         -18 - Math.random() * 18,
         z,
@@ -557,7 +553,6 @@ for (
         10 + Math.random() * 28,
         16 + Math.random() * 12
     );
-
 
     createBuilding(
         18 + Math.random() * 18,
@@ -767,9 +762,11 @@ scene.add(car);
 
 
 let carModel = null;
+
 let mixer = null;
 
 let wheelObjects = [];
+
 let steeringObjects = [];
 
 
@@ -781,8 +778,6 @@ const loader =
     new GLTFLoader();
 
 
-/* DRACO */
-
 const dracoLoader =
     new DRACOLoader();
 
@@ -793,9 +788,6 @@ dracoLoader.setDecoderPath(
 loader.setDRACOLoader(
     dracoLoader
 );
-
-
-/* MESHOPT */
 
 loader.setMeshoptDecoder(
     MeshoptDecoder
@@ -823,7 +815,7 @@ loader.load(
 
 
         /* =============================================
-           FIND SIZE
+           SCALE
         ============================================= */
 
         const box =
@@ -855,7 +847,7 @@ loader.load(
 
 
         /* =============================================
-           CENTER MODEL
+           CENTER
         ============================================= */
 
         const scaledBox =
@@ -871,7 +863,6 @@ loader.load(
             center
         );
 
-
         carModel.position.x -=
             center.x;
 
@@ -882,16 +873,21 @@ loader.load(
             scaledBox.min.y;
 
 
-        /* =============================================
-           ORIENTATION
-        ============================================= */
+        /*
+           IMPORTANT:
+           The model's forward axis was sideways.
+
+           Rotating the MODEL by 90 degrees fixes
+           the visual orientation without changing
+           the actual driving physics.
+        */
 
         carModel.rotation.y =
-            Math.PI;
+            Math.PI / 2;
 
 
         /* =============================================
-           MATERIALS + WHEELS
+           FIND WHEELS
         ============================================= */
 
         carModel.traverse(
@@ -902,6 +898,7 @@ loader.load(
 
 
                 object.castShadow = true;
+
                 object.receiveShadow = true;
 
 
@@ -940,7 +937,8 @@ loader.load(
                 if (
                     name.includes("wheel") ||
                     name.includes("tire") ||
-                    name.includes("tyre")
+                    name.includes("tyre") ||
+                    name.includes("rim")
                 ) {
 
                     wheelObjects.push(
@@ -960,6 +958,12 @@ loader.load(
                     );
                 }
             }
+        );
+
+
+        console.log(
+            "WHEELS FOUND:",
+            wheelObjects.length
         );
 
 
@@ -995,18 +999,6 @@ loader.load(
         }
 
 
-        /* =============================================
-           SUCCESS
-        ============================================= */
-
-        document
-            .getElementById(
-                "loadingTitle"
-            )
-            .textContent =
-            "HORIZON";
-
-
         document
             .getElementById(
                 "loadingText"
@@ -1032,10 +1024,6 @@ loader.load(
     },
 
 
-    /* =============================================
-       LOADING PROGRESS
-    ============================================= */
-
     function (xhr) {
 
         if (xhr.total) {
@@ -1058,10 +1046,6 @@ loader.load(
         }
     },
 
-
-    /* =============================================
-       ERROR
-    ============================================= */
 
     function (error) {
 
@@ -1099,30 +1083,46 @@ loader.load(
 
 
 /* =====================================================
-   PHYSICS
+   DRIVING PHYSICS
 ===================================================== */
+
+/*
+   Slowed down significantly for testing.
+*/
 
 let speed = 0;
 
 let steering = 0;
 
-const MAX_SPEED = 2.5;
 
-const MAX_REVERSE = 0.85;
+/* Maximum speed is now much lower */
 
-const ACCELERATION = 0.035;
+const MAX_SPEED = 0.85;
 
-const REVERSE_ACCELERATION = 0.02;
+const MAX_REVERSE = 0.35;
 
-const BRAKE_POWER = 0.09;
 
-const FRICTION = 0.01;
+/* Acceleration */
+
+const ACCELERATION = 0.012;
+
+const REVERSE_ACCELERATION = 0.008;
+
+
+/* Braking */
+
+const BRAKE_POWER = 0.035;
+
+const FRICTION = 0.008;
+
+
+/* Steering */
 
 const MAX_STEERING = 0.62;
 
-const STEERING_RESPONSE = 0.13;
+const STEERING_RESPONSE = 0.12;
 
-const TURN_RATE = 0.04;
+const TURN_RATE = 0.055;
 
 
 /* =====================================================
@@ -1268,7 +1268,7 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       ACCELERATION
+       ACCELERATE
     ============================================= */
 
     if (accelerate) {
@@ -1282,14 +1282,18 @@ function updateDriving(delta) {
                 MAX_SPEED
             );
 
-    } else if (reverse) {
+    }
+
+    else if (reverse) {
 
         if (speed > 0) {
 
             speed -=
                 BRAKE_POWER;
 
-        } else {
+        }
+
+        else {
 
             speed -=
                 REVERSE_ACCELERATION;
@@ -1301,7 +1305,11 @@ function updateDriving(delta) {
                 );
         }
 
-    } else {
+    }
+
+    else {
+
+        /* Natural slowdown */
 
         if (speed > 0) {
 
@@ -1314,7 +1322,9 @@ function updateDriving(delta) {
                     0
                 );
 
-        } else if (speed < 0) {
+        }
+
+        else if (speed < 0) {
 
             speed +=
                 FRICTION;
@@ -1329,7 +1339,7 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       BRAKE
+       SPACE BRAKE
     ============================================= */
 
     if (brake) {
@@ -1342,7 +1352,7 @@ function updateDriving(delta) {
 
 
         if (
-            Math.abs(speed) < 0.03
+            Math.abs(speed) < 0.02
         ) {
 
             speed = 0;
@@ -1358,12 +1368,12 @@ function updateDriving(delta) {
 
 
     if (left)
-        targetSteering -=
-            MAX_STEERING;
+        targetSteering =
+            -MAX_STEERING;
 
 
     if (right)
-        targetSteering +=
+        targetSteering =
             MAX_STEERING;
 
 
@@ -1376,11 +1386,11 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       TURN
+       TURN CAR
     ============================================= */
 
     if (
-        Math.abs(speed) > 0.01
+        Math.abs(speed) > 0.005
     ) {
 
         const turn =
@@ -1399,7 +1409,7 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       MOVEMENT
+       FORWARD MOVEMENT
     ============================================= */
 
     const forward =
@@ -1434,7 +1444,7 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       WHEEL ROTATION
+       WHEEL SPIN
     ============================================= */
 
     for (
@@ -1442,13 +1452,18 @@ function updateDriving(delta) {
         of wheelObjects
     ) {
 
+        /*
+           Most vehicle models use X as the
+           wheel rotation axis.
+        */
+
         wheel.rotation.x -=
-            speed * 2.8;
+            speed * 5;
     }
 
 
     /* =============================================
-       STEERING OBJECTS
+       FRONT WHEEL STEERING
     ============================================= */
 
     for (
@@ -1461,6 +1476,10 @@ function updateDriving(delta) {
     }
 
 
+    /* =============================================
+       ANIMATIONS
+    ============================================= */
+
     if (mixer) {
 
         mixer.update(
@@ -1470,12 +1489,12 @@ function updateDriving(delta) {
 
 
     /* =============================================
-       SPEED DISPLAY
+       SPEEDOMETER
     ============================================= */
 
     const kmh =
         Math.round(
-            Math.abs(speed) * 68
+            Math.abs(speed) * 115
         );
 
 
@@ -1491,7 +1510,7 @@ function updateDriving(delta) {
        GEAR
     ============================================= */
 
-    if (speed > 0.02) {
+    if (speed > 0.01) {
 
         document
             .getElementById(
@@ -1500,7 +1519,9 @@ function updateDriving(delta) {
             .textContent =
             "D";
 
-    } else if (speed < -0.02) {
+    }
+
+    else if (speed < -0.01) {
 
         document
             .getElementById(
@@ -1509,7 +1530,9 @@ function updateDriving(delta) {
             .textContent =
             "R";
 
-    } else {
+    }
+
+    else {
 
         document
             .getElementById(
