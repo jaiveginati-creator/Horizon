@@ -206,26 +206,32 @@ canvas {
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+
 /* =====================================================
    BASIC SETUP
 ===================================================== */
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x87a9c2);
+scene.background =
+    new THREE.Color(0x87a9c2);
 
-scene.fog = new THREE.Fog(
-    0x87a9c2,
-    100,
-    500
-);
+scene.fog =
+    new THREE.Fog(
+        0x87a9c2,
+        100,
+        500
+    );
 
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1500
-);
+
+const camera =
+    new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        1500
+    );
 
 camera.position.set(
     0,
@@ -233,9 +239,11 @@ camera.position.set(
     8
 );
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: true
-});
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
 
 renderer.setSize(
     window.innerWidth,
@@ -243,7 +251,10 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 renderer.shadowMap.enabled = true;
@@ -265,10 +276,11 @@ document.body.appendChild(
    LIGHTING
 ===================================================== */
 
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    3
-);
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
 
 sun.position.set(
     150,
@@ -397,7 +409,11 @@ createRoad(
 
 /* Smaller roads */
 
-for (let x = -300; x <= 300; x += 80) {
+for (
+    let x = -300;
+    x <= 300;
+    x += 80
+) {
 
     createRoad(
         x,
@@ -407,7 +423,12 @@ for (let x = -300; x <= 300; x += 80) {
     );
 }
 
-for (let z = -300; z <= 300; z += 80) {
+
+for (
+    let z = -300;
+    z <= 300;
+    z += 80
+) {
 
     createRoad(
         0,
@@ -459,8 +480,6 @@ function createLine(
 }
 
 
-/* Center road markings */
-
 for (
     let z = -580;
     z < 580;
@@ -481,6 +500,7 @@ for (
 ===================================================== */
 
 const buildingMaterials = [
+
     new THREE.MeshStandardMaterial({
         color: 0x55585c,
         roughness: .8
@@ -500,6 +520,7 @@ const buildingMaterials = [
         color: 0x72706b,
         roughness: .8
     })
+
 ];
 
 
@@ -587,12 +608,11 @@ for (
         z += 80
     ) {
 
-        /* Leave roads clear */
-
         if (
             Math.abs(x) < 20 ||
             Math.abs(z) < 20
         ) continue;
+
 
         const height =
             12 +
@@ -606,9 +626,14 @@ for (
             25 +
             Math.random() * 20;
 
+
         createBuilding(
-            x + (Math.random() * 15 - 7),
-            z + (Math.random() * 15 - 7),
+            x +
+            (Math.random() * 15 - 7),
+
+            z +
+            (Math.random() * 15 - 7),
+
             width,
             depth,
             height
@@ -703,7 +728,9 @@ car.position.set(
 );
 
 
-/* Body */
+/* =====================================================
+   CAR BODY
+===================================================== */
 
 const body =
     new THREE.Mesh(
@@ -724,7 +751,9 @@ body.castShadow = true;
 car.add(body);
 
 
-/* Cabin */
+/* =====================================================
+   CABIN
+===================================================== */
 
 const cabin =
     new THREE.Mesh(
@@ -751,7 +780,9 @@ cabin.castShadow = true;
 car.add(cabin);
 
 
-/* Wheels */
+/* =====================================================
+   WHEELS
+===================================================== */
 
 const wheelGeometry =
     new THREE.CylinderGeometry(
@@ -799,6 +830,8 @@ function createWheel(
 }
 
 
+/* Front wheels */
+
 createWheel(
     -1.15,
     -1.45
@@ -809,6 +842,9 @@ createWheel(
     -1.45
 );
 
+
+/* Rear wheels */
+
 createWheel(
     -1.15,
     1.45
@@ -818,6 +854,16 @@ createWheel(
     1.15,
     1.45
 );
+
+
+/* =====================================================
+   FRONT WHEELS
+===================================================== */
+
+const frontWheels = [
+    wheels[0],
+    wheels[1]
+];
 
 
 /* =====================================================
@@ -859,7 +905,8 @@ function createTrafficCar(
 
     traffic.push({
         mesh: vehicle,
-        speed: 0.08 +
+        speed:
+            0.08 +
             Math.random() * .08
     });
 }
@@ -883,7 +930,9 @@ for (
 
     createTrafficCar(
         -6,
-        -300 + Math.random() * 600,
+        -300 +
+        Math.random() * 600,
+
         trafficColors[
             Math.floor(
                 Math.random() *
@@ -900,12 +949,15 @@ for (
 
 const keys = {};
 
+
 window.addEventListener(
     "keydown",
     e => {
 
-        keys[e.key.toLowerCase()] =
-            true;
+        keys[
+            e.key.toLowerCase()
+        ] = true;
+
 
         if (
             e.key.toLowerCase() === "n"
@@ -916,6 +968,7 @@ window.addEventListener(
 
             updateLighting();
         }
+
     }
 );
 
@@ -924,14 +977,16 @@ window.addEventListener(
     "keyup",
     e => {
 
-        keys[e.key.toLowerCase()] =
-            false;
+        keys[
+            e.key.toLowerCase()
+        ] = false;
+
     }
 );
 
 
 /* =====================================================
-   DRIVING PHYSICS
+   DRIVING PHYSICS — HORIZON V2
 ===================================================== */
 
 let speed = 0;
@@ -940,16 +995,31 @@ let steering = 0;
 
 let nightMode = false;
 
-const maxSpeed = 1.35;
 
-const acceleration = .018;
+/* Car tuning */
 
-const braking = .035;
+const maxSpeed = 1.8;
 
-const friction = .008;
+const maxReverseSpeed = 0.65;
 
-const steeringStrength = .035;
+const acceleration = 0.025;
 
+const reverseAcceleration = 0.018;
+
+const braking = 0.055;
+
+const friction = 0.012;
+
+const maxSteering = 0.55;
+
+const steeringResponse = 0.12;
+
+const turnStrength = 0.035;
+
+
+/* =====================================================
+   UPDATE CAR
+===================================================== */
 
 function updateCar() {
 
@@ -957,26 +1027,58 @@ function updateCar() {
         keys["w"] ||
         keys["arrowup"];
 
+
     const brakingInput =
         keys["s"] ||
         keys["arrowdown"];
 
+
     const left =
         keys["a"] ||
         keys["arrowleft"];
+
 
     const right =
         keys["d"] ||
         keys["arrowright"];
 
 
-    /* Acceleration */
+    /* =================================================
+       ACCELERATION
+    ================================================= */
 
     if (accelerating) {
 
-        speed += acceleration;
+        if (speed < 0) {
 
-    } else {
+            speed += braking;
+
+        } else {
+
+            speed += acceleration;
+
+        }
+
+    }
+
+    else if (brakingInput) {
+
+        if (speed > 0) {
+
+            speed -= braking;
+
+        } else {
+
+            speed -=
+                reverseAcceleration;
+
+        }
+
+    }
+
+    else {
+
+        /* Natural rolling resistance */
 
         if (speed > 0) {
 
@@ -984,113 +1086,169 @@ function updateCar() {
 
         }
 
-        if (speed < 0) {
+        else if (speed < 0) {
 
             speed += friction;
 
         }
-    }
-
-
-    /* Braking */
-
-    if (brakingInput) {
-
-        speed -= braking;
 
     }
 
 
-    /* Handbrake */
+    /* =================================================
+       HANDBRAKE
+    ================================================= */
 
     if (keys[" "]) {
 
-        speed *= .96;
+        speed *= 0.94;
 
     }
 
 
-    /* Limit speed */
+    /* =================================================
+       SPEED LIMIT
+    ================================================= */
 
     speed =
         THREE.MathUtils.clamp(
             speed,
-            -.45,
+            -maxReverseSpeed,
             maxSpeed
         );
 
 
-    /* Steering */
+    /* =================================================
+       STEERING INPUT
+    ================================================= */
 
     let targetSteering = 0;
 
-    if (left)
-        targetSteering = .9;
 
-    if (right)
-        targetSteering = -.9;
+    if (left) {
 
+        targetSteering = 1;
+
+    }
+
+
+    if (right) {
+
+        targetSteering = -1;
+
+    }
+
+
+    /* Smooth steering */
 
     steering +=
         (
             targetSteering -
             steering
-        ) * .12;
+        ) *
+        steeringResponse;
 
 
-    /* Car rotation */
+    /* =================================================
+       VISUAL FRONT-WHEEL STEERING
+    ================================================= */
 
-    const steeringEffect =
-        speed * steeringStrength;
-
-    car.rotation.y +=
-        steeringEffect;
+    const wheelAngle =
+        steering *
+        maxSteering;
 
 
-    /* Move */
+    frontWheels.forEach(
+        wheel => {
+
+            wheel.rotation.y =
+                wheelAngle;
+
+        }
+    );
+
+
+    /* =================================================
+       CAR TURNING
+    ================================================= */
+
+    const speedFactor =
+        Math.min(
+            Math.abs(speed) /
+            maxSpeed,
+            1
+        );
+
 
     const direction =
+        speed >= 0
+            ? 1
+            : -1;
+
+
+    car.rotation.y +=
+        steering *
+        turnStrength *
+        speedFactor *
+        direction;
+
+
+    /* =================================================
+       CAR MOVEMENT
+    ================================================= */
+
+    const forward =
         new THREE.Vector3(
             0,
             0,
             -1
         );
 
-    direction.applyQuaternion(
+
+    forward.applyQuaternion(
         car.quaternion
     );
 
+
     car.position.addScaledVector(
-        direction,
+        forward,
         speed
     );
 
 
-    /* Suspension movement */
+    /* =================================================
+       SUSPENSION
+    ================================================= */
 
     const suspension =
         Math.sin(
             performance.now() *
-            .012
+            0.012
         ) *
         Math.min(
-            Math.abs(speed) * .015,
-            .025
+            Math.abs(speed) *
+            0.012,
+            0.025
         );
+
 
     body.position.y =
         suspension;
 
 
-    /* Wheel rotation */
+    /* =================================================
+       WHEEL ROTATION
+    ================================================= */
 
     wheels.forEach(
         wheel => {
 
             wheel.rotation.x -=
-                speed * 2.5;
+                speed * 2.8;
+
         }
     );
+
 }
 
 
@@ -1107,9 +1265,11 @@ function updateCamera() {
             8.5
         );
 
+
     offset.applyQuaternion(
         car.quaternion
     );
+
 
     const target =
         car.position
@@ -1119,7 +1279,7 @@ function updateCamera() {
 
     camera.position.lerp(
         target,
-        .08
+        0.08
     );
 
 
@@ -1127,11 +1287,14 @@ function updateCamera() {
         car.position
             .clone();
 
+
     lookAt.y += 1;
+
 
     camera.lookAt(
         lookAt
     );
+
 }
 
 
@@ -1147,6 +1310,7 @@ function updateTraffic() {
             vehicle.mesh.position.z +=
                 vehicle.speed;
 
+
             if (
                 vehicle.mesh.position.z >
                 600
@@ -1154,9 +1318,12 @@ function updateTraffic() {
 
                 vehicle.mesh.position.z =
                     -600;
+
             }
+
         }
     );
+
 }
 
 
@@ -1179,10 +1346,11 @@ function updateLighting() {
             );
 
         sun.intensity =
-            .25;
+            0.25;
 
         skyLight.intensity =
-            .35;
+            0.35;
+
 
         document.getElementById(
             "weather"
@@ -1198,13 +1366,18 @@ function updateLighting() {
                     object.userData.lamp
                 ) {
 
-                    object.userData.lamp
+                    object.userData
+                        .lamp
                         .intensity = 2;
+
                 }
+
             }
         );
 
-    } else {
+    }
+
+    else {
 
         scene.background =
             new THREE.Color(
@@ -1222,6 +1395,7 @@ function updateLighting() {
         skyLight.intensity =
             1.5;
 
+
         document.getElementById(
             "weather"
         ).textContent =
@@ -1236,12 +1410,17 @@ function updateLighting() {
                     object.userData.lamp
                 ) {
 
-                    object.userData.lamp
+                    object.userData
+                        .lamp
                         .intensity = 0;
+
                 }
+
             }
         );
+
     }
+
 }
 
 
@@ -1253,8 +1432,10 @@ function updateHUD() {
 
     const kmh =
         Math.round(
-            Math.abs(speed) * 70
+            Math.abs(speed) *
+            70
         );
+
 
     document.getElementById(
         "speed"
@@ -1264,14 +1445,17 @@ function updateHUD() {
 
     let gear = "N";
 
-    if (speed > .05)
+
+    if (speed > 0.05)
         gear = "D";
 
-    if (speed < -.05)
+
+    if (speed < -0.05)
         gear = "R";
 
+
     if (
-        Math.abs(speed) < .02
+        Math.abs(speed) < 0.02
     )
         gear = "P";
 
@@ -1280,6 +1464,7 @@ function updateHUD() {
         "gear"
     ).textContent =
         gear;
+
 }
 
 
@@ -1295,12 +1480,15 @@ window.addEventListener(
             window.innerWidth /
             window.innerHeight;
 
+
         camera.updateProjectionMatrix();
+
 
         renderer.setSize(
             window.innerWidth,
             window.innerHeight
         );
+
     }
 );
 
@@ -1315,6 +1503,7 @@ function animate() {
         animate
     );
 
+
     updateCar();
 
     updateCamera();
@@ -1323,18 +1512,21 @@ function animate() {
 
     updateHUD();
 
+
     renderer.render(
         scene,
         camera
     );
+
 }
 
 
 /* =====================================================
-   START
+   LOADING
 ===================================================== */
 
 let progress = 0;
+
 
 const loadingInterval =
     setInterval(
@@ -1342,17 +1534,21 @@ const loadingInterval =
 
             progress += 5;
 
+
             document.getElementById(
                 "loadingProgress"
             ).style.width =
                 progress + "%";
 
 
-            if (progress >= 100) {
+            if (
+                progress >= 100
+            ) {
 
                 clearInterval(
                     loadingInterval
                 );
+
 
                 setTimeout(
                     () => {
@@ -1362,8 +1558,10 @@ const loadingInterval =
                                 "loading"
                             );
 
+
                         loading.style.opacity =
                             "0";
+
 
                         setTimeout(
                             () => {
@@ -1378,12 +1576,15 @@ const loadingInterval =
                     },
                     300
                 );
+
             }
 
         },
         60
     );
 
+
+/* Start */
 
 animate();
 
